@@ -1,42 +1,33 @@
-# JavaScript SDK
+# JavaScript / TypeScript SDK
 
-The [`rayon-sdk-js` repository](https://github.com/Rayon-API/rayon-sdk-js) provides a Node.js SDK using `undici` for API transport. Use Node 20.18.1 or later; Node 22 is suitable. Run it on the server so your API key stays private.
-
-## Install
-
-Version `0.1.0` is available on [npm](https://www.npmjs.com/package/rayon-sdk-js):
+Use the SDK server-side; API keys must not be shipped to browsers.
 
 ```sh
-npm install rayon-sdk-js@0.1.0
+npm install rayon-sdk-js@^1
 ```
 
-## Solve
+```javascript
+import { readFile } from 'node:fs/promises'
+import { RayonClient } from 'rayon-sdk-js'
 
-```js
-import { solve, RayonError } from 'rayon-sdk-js'
-
-const key = process.env.RAYON_API_KEY
-if (!key) throw new Error('Set RAYON_API_KEY')
-
+const shape = JSON.parse(await readFile('shape-request.json', 'utf8'))
+const client = new RayonClient(process.env.RAYON_API_KEY, { timeoutMs: 30000 })
 try {
-  const result = await solve('https://example.com/start', key, {
-    baseUrl: 'https://api.rayonapi.com',
-    timeoutMs: 150_000,
-  })
-  // Keep result.headers and result.cookies within their target scope.
-} catch (error) {
-  if (error instanceof RayonError) {
-    if (error.kind === 'capture') {
-      throw new Error('Capture failed or was rejected')
-    }
-    throw new Error('API request failed; inspect the error safely')
-  }
-  throw error
+  const result = await client.generate(shape)
+  const usage = await client.usage()
+  // Apply result.headers using your separate target session.
+} finally {
+  await client.close()
 }
 ```
 
-`solve(url, key, { profile?, baseUrl?, timeoutMs? })` returns a promise of an accepted `SolveResult`. For an HTTP `200` response with `failed` or `rejected` capture status, it throws `RayonError` with `kind: 'capture'`. The package exports the `SolveResult` TypeScript type and `RayonError` class. Response fields retain their snake_case names, including `target_url`, `duration_ms`, and `profile_used`.
+Pass an `AbortSignal` to cancel a request:
 
-`profile` is an optional JSON-compatible object. Omit it for the default. If it contains a `profile` key, that nested value must be a JSON object. `timeoutMs` controls the client timeout in milliseconds; `duration_ms` measures server solve execution, not total client elapsed time.
+```javascript
+const controller = new AbortController()
+const result = await client.generate(shape, { signal: controller.signal })
+```
 
-The SDK's `undici` transport to RayonAPI does not provide browser-grade TLS for downstream target requests. Use a suitable target transport and apply the [core requirements](./requirements.md).
+The typed contract matches the [REST reference](../reference/shape.md). The client reuses API connections and provides structured errors; it does not download protection scripts or retry generation automatically.
+
+Cancellation or a transport timeout does not prove the server never admitted the job. Check your usage before deciding whether to make another generation attempt.

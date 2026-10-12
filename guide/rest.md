@@ -1,33 +1,25 @@
-# Direct REST examples
+# Direct REST
 
-Use `POST https://api.rayonapi.com/solve` with a bearer key from `RAYON_API_KEY`. Replace `https://example.com/start` with the actual source page on an approved domain. These examples call the API only; they do not send target requests.
+Send JSON to `https://api.rayonapi.com/v1/shape` with `Authorization: Bearer <key>`. The request contains your downloaded scripts, profile and exact application request.
 
-Each example checks both the HTTP result and capture status. They avoid printing API keys, telemetry, or cookies. See [errors and limits](../reference/errors.md) for retry handling before adding retries to an application.
-
-## Python
-
-Install the API transport dependency:
+Prepare `shape-request.json` using the [material guide](./material.md). Then:
 
 ```sh
-python -m pip install curl_cffi
+curl --fail-with-body --max-time 30   https://api.rayonapi.com/v1/shape   -H "Authorization: Bearer $RAYON_API_KEY"   -H 'Content-Type: application/json'   --data-binary @shape-request.json
 ```
+
+Do not put API keys in URLs. Use uncompressed JSON first; gzip request bodies must also meet the decoded-size limit.
+
+## Python
 
 <<< ../examples/rest.py
 
 ## JavaScript
 
-Run as an ES module on Node 22. Native `fetch` is suitable for API transport; it does not supply browser-grade TLS for downstream target traffic.
-
 <<< ../examples/rest.mjs{js}
 
 ## Go
 
-This standard-library example requires Go 1.20 or later. Its `http.Client` calls RayonAPI; use a browser-compatible transport for downstream target traffic.
-
 <<< ../examples/rest.go
 
-## Continue to the target
-
-An accepted capture requires a separate target client with appropriate TLS, profile, stable egress, and cookie scope. Apply the [core requirements](./requirements.md). The public API has no downstream route or proxy controls.
-
-More workflow examples live in [`rayon-examples`](https://github.com/Rayon-API/rayon-examples).
+These examples call RayonAPI only. Your application separately downloads material and submits generated headers using its existing target session. See [applying results](./applying-headers.md).

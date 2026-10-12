@@ -1,20 +1,25 @@
 # Errors and limits
 
-HTTP status describes the API request. The JSON `status` describes the capture outcome. Direct REST callers must check both; SDKs turn unsuccessful captures into exceptions.
+Every API error uses a sanitized JSON envelope and `X-Request-ID`:
 
-| HTTP status | Meaning | Action |
-| --- | --- | --- |
-| `200` | A capture result, including possible `failed` status | Inspect `status`; acceptance is not target verification. |
-| `401` | Invalid or revoked API key | Check your key securely or create a replacement in the dashboard. |
-| `403` | Account or domain access denied, or policies not accepted | Check account state, domain approval, and current policies. |
-| `422` | Invalid input | Correct the target URL or request/profile structure. |
-| `429` | Rate, quota, or concurrency limit | Honor `Retry-After` and check dashboard limits. |
-| `503` | Service unavailable | Retry later with bounded backoff. |
+```json
+{"error":{"code":"unsupported_material","message":"The supplied material could not generate the required headers.","request_id":"00000000-0000-4000-8000-000000000001"}}
+```
 
-`Retry-After` on a `429` is expressed in seconds until another attempt may be admitted. Use bounded retries and avoid parallel retry storms. Limits depend on the account; consult the dashboard rather than hard-coding a published quota.
+| HTTP | Meaning |
+| --- | --- |
+| 401 | Missing, invalid or revoked API key. |
+| 403 | Account, policy or domain access denied. |
+| 404 / 405 | Unknown route / unsupported method. |
+| 410 | `api_retired`: URL-only `/solve` has been retired. |
+| 413 | `input_too_large`. |
+| 415 | Unsupported content type or content encoding. |
+| 422 | Invalid request, unsupported material/profile, expired material or ambiguous header family. |
+| 429 | Rate, quota or available generation capacity exceeded. Inspect `Retry-After`. |
+| 500 | Internal error; retain the request ID for support. |
+| 503 | Service or generation worker unavailable. |
+| 504 | Generation timed out. |
 
-Quota accounting counts admitted solve attempts once, including failed attempts. Quota resets use UTC. An HTTP error does not justify assuming that every retry is free.
+Generation POSTs are not automatically retried by the SDK. A network timeout may happen after admission and does not prove that the attempt was free. Each explicit retry is a new attempt with fresh request inputs.
 
-The response may include `X-Request-ID` for correlation with dashboard history. Keep that identifier with a redacted diagnostic record.
-
-For HTTP `200` responses with `failed` or `rejected` capture status, the Python SDK raises `SolveFailedError` (a `RayonError` subclass), and the JavaScript SDK throws `RayonError` with `kind: 'capture'`. Both SDKs return only accepted results. Handle these exceptions alongside request/API errors. For accepted results, `errors` may still contain earlier fallback diagnostics.
+Do not publish credentials, scripts, session cookies or application bodies when reporting errors.

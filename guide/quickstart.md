@@ -2,56 +2,62 @@
 
 ## Get access
 
-1. Open the [RayonAPI dashboard](https://dashboard.rayonapi.com) and request access.
-2. Request approval for the target domain and accept the current policies.
-3. Create an API key. It is shown once; store it securely when it appears.
+Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies, request approval for your source and API domains, and create a key. Store it server-side as `RAYON_API_KEY`.
 
-Use an environment variable such as `RAYON_API_KEY`. Keep keys out of URLs, source control, request logs, and shared screenshots. A solve must use an approved target domain.
+## Install
 
-## Install an SDK
-
-Install the Python SDK from PyPI or the JavaScript SDK from npm:
-
-::: code-group
-
-```sh [Python]
-python -m pip install rayon-sdk-py==0.1.0
+```sh
+python -m pip install 'rayon-sdk-py>=1.0,<2'
 ```
 
-```sh [JavaScript]
-npm install rayon-sdk-js@0.1.0
+```sh
+npm install rayon-sdk-js@^1
 ```
 
-:::
+Version 1 uses client-supplied material. Follow the [migration guide](./migration.md) if your application uses version 0.1.
 
-See the [Python](./python.md) and [JavaScript](./javascript.md) guides for SDK usage and installation details.
+## Prepare the material
 
-## Make your first solve
+Use your own target HTTP session to download the protection loader and payload. Keep their full source, exact URLs and execution order in a local JSON file:
 
-Replace the illustrative URL below with the real page that initiates your authorized workflow on an approved domain.
+```json
+{
+  "source_url": "https://example.com/account",
+  "scripts": [
+    {"url": "https://example.com/loader.js", "source": "/* Full downloaded loader source */"},
+    {"url": "https://example.com/protection.js?seed=example", "source": "/* Full downloaded protection source */"}
+  ]
+}
+```
+
+These comment-only script values illustrate the format; they cannot generate headers. Supply actual protection source and dependencies. See [material preparation](./material.md).
+
+## Generate headers
+
+Read the material and your supported profile from files owned by your application:
 
 ```python
+import json
 import os
-from rayon_sdk_py import RayonError, SolveFailedError, solve
+from pathlib import Path
+from rayon_sdk_py import Client
 
-try:
-    result = solve(
-        "https://example.com/start",
-        os.environ["RAYON_API_KEY"],
-        timeout=150,
-    )
-except SolveFailedError:
-    raise SystemExit("Capture failed or was rejected")
-except RayonError:
-    raise SystemExit("API request failed; inspect the error safely")
-
-# Use result.headers and result.cookies in a scoped target client.
+material = json.loads(Path("material.json").read_text())
+profile = json.loads(Path("profile.json").read_text())
+body = json.dumps({"username": "example_user"}, separators=(",", ":"))
+shape = {
+    **material,
+    "profile": profile,
+    "request": {
+        "url": "https://example.com/api/username",
+        "method": "POST",
+        "content_type": "application/json",
+        "body": body,
+    },
+}
+with Client(os.environ["RAYON_API_KEY"]) as client:
+    result = client.generate(shape)
+# Apply result.headers to this exact request in your existing target session.
 ```
 
-An HTTP error and an unsuccessful capture are different outcomes. A valid HTTP `200` response can contain `status: "failed"`. The SDK raises `SolveFailedError` for unsuccessful capture; direct REST callers must check the JSON status themselves. A successful fallback can retain earlier diagnostics in `errors`.
-
-## Prepare the target client
-
-Read the [core requirements](./requirements.md) before replaying anything. Your downstream request needs browser-grade TLS, a consistent client profile, stable egress, and correctly scoped cookies. The SDK's transport to RayonAPI does not configure your transport to the target website.
-
-Continue with [Shape / F5](./shape-f5.md) for telemetry-specific guidance or the [API reference](../reference/solve.md) for the complete contract.
+Send the same body string to the target. Keep your target cookies and browser identity consistent; RayonAPI does not return replacement cookies. See [applying results](./applying-headers.md).

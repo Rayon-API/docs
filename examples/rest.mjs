@@ -1,21 +1,13 @@
-const key = process.env.RAYON_API_KEY
-if (!key) throw new Error('Set RAYON_API_KEY')
-
-const response = await fetch('https://api.rayonapi.com/solve', {
+import { readFile } from 'node:fs/promises'
+const body = await readFile('shape-request.json', 'utf8')
+const response = await fetch('https://api.rayonapi.com/v1/shape', {
   method: 'POST',
+  headers: { authorization: `Bearer ${process.env.RAYON_API_KEY}`, 'content-type': 'application/json' },
+  body,
   redirect: 'error',
-  headers: {
-    Authorization: `Bearer ${key}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ target_url: 'https://example.com/start' }),
-  signal: AbortSignal.timeout(150_000),
+  signal: AbortSignal.timeout(30000)
 })
-if (!response.ok) throw new Error(`RayonAPI HTTP ${response.status}`)
-
+if (!response.ok) throw new Error(`Generation failed: HTTP ${response.status}`)
 const result = await response.json()
-if (result.status !== 'accepted') {
-  throw new Error(`Capture status: ${result.status}`)
-}
-console.log('Capture accepted')
-// Replay requires a separate, scoped target client.
+console.log('Generated request:', result.request_id)
+// Apply result.headers using your existing target session and exact request.

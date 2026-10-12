@@ -1,41 +1,35 @@
 # Python SDK
 
-The [`rayon-sdk-py` repository](https://github.com/Rayon-API/rayon-sdk-py) provides the `rayon_sdk_py` import for Python 3.10+. It uses `curl_cffi` with Chrome impersonation for API transport. Your target client remains separate.
-
-## Install
-
-Version `0.1.0` is available on [PyPI](https://pypi.org/project/rayon-sdk-py/):
-
 ```sh
-python -m pip install rayon-sdk-py==0.1.0
+python -m pip install 'rayon-sdk-py>=1.0,<2'
 ```
 
-## Solve
+Use a persistent client for multiple requests:
 
 ```python
+import json
 import os
-from rayon_sdk_py import RayonError, SolveFailedError, SolveResult, solve
+from pathlib import Path
+from rayon_sdk_py import Client
 
-try:
-    result: SolveResult = solve(
-        "https://example.com/start",
-        os.environ["RAYON_API_KEY"],
-        profile=None,
-        base_url="https://api.rayonapi.com",
-        timeout=150,
-    )
-except SolveFailedError:
-    raise SystemExit("Capture failed or was rejected")
-except RayonError:
-    raise SystemExit("API request failed; inspect the error safely")
-
-# Preserve result.headers and the scope of result.cookies.
+shape = json.loads(Path("shape-request.json").read_text())
+with Client(os.environ["RAYON_API_KEY"], timeout=30) as client:
+    result = client.generate(shape)
+    usage = client.usage()
 ```
 
-`solve(url, key, profile=..., base_url=..., timeout=150)` returns an accepted `SolveResult`. For an HTTP `200` response with `failed` or `rejected` capture status, it raises `SolveFailedError`, a subclass of `RayonError`. Catch that exception separately from other SDK/API request errors when your application needs different recovery behavior.
+`shape-request.json` follows the [generation contract](../reference/shape.md). Read full protection source from your files rather than copying illustrative comments from the docs.
 
-`profile` is an optional JSON-compatible mapping. Omit it to use the service default. If it contains a `profile` key, that nested value must be a JSON object. Keep your downstream client consistent with `profile_used`; the public contract does not otherwise promise a fixed profile-field schema.
+For asynchronous applications:
 
-`timeout` is the client timeout in seconds. `duration_ms` is the server's solve execution time and excludes client-side connection setup, network latency, and response processing. See the [response reference](../reference/solve.md#response).
+```python
+from rayon_sdk_py import AsyncClient
 
-Apply the [core requirements](./requirements.md) to downstream target requests. See the [example repository](https://github.com/Rayon-API/rayon-examples) for complete authorized workflow examples.
+async def generate_headers(shape, api_key):
+    async with AsyncClient(api_key, timeout=30) as client:
+        return await client.generate(shape)
+```
+
+The SDK exposes typed request/result models, validates response structure and raises structured errors for unsuccessful HTTP responses. It does not fetch target material or retry generation automatically. Close clients when finished to release connections.
+
+`result.generation_ms` is server-side generation time. Measure elapsed time around `client.generate()` for the full latency your application sees, including upload and network time.

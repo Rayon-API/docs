@@ -2,17 +2,17 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'RayonAPI',
-  description: 'Public API documentation for telemetry capture and safe session replay.',
-  base: '/docs/',
-  srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md'],
+  description: 'Material-only Shape header generation API and SDK documentation.',
+  base: process.env.DOCS_BASE_PATH || '/',
+  srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md', 'CHANGELOG.md'],
   cleanUrls: true,
   appearance: 'dark',
-  head: [['link', { rel: 'icon', href: '/docs/favicon.svg', type: 'image/svg+xml' }]],
+  head: [['link', { rel: 'icon', href: `${process.env.DOCS_BASE_PATH || '/'}favicon.svg`, type: 'image/svg+xml' }]],
   themeConfig: {
     logo: '/favicon.svg',
     nav: [
       { text: 'Guide', link: '/guide/quickstart' },
-      { text: 'API reference', link: '/reference/solve' },
+      { text: 'API reference', link: '/reference/shape' },
       { text: 'Dashboard', link: 'https://dashboard.rayonapi.com' }
     ],
     sidebar: [
@@ -22,6 +22,9 @@ export default defineConfig({
         { text: 'Core requirements', link: '/guide/requirements' }
       ] },
       { text: 'Integrate', items: [
+        { text: 'Prepare material', link: '/guide/material' },
+        { text: 'Browser profiles', link: '/guide/profiles' },
+        { text: 'Apply headers', link: '/guide/applying-headers' },
         { text: 'Python SDK', link: '/guide/python' },
         { text: 'JavaScript SDK', link: '/guide/javascript' },
         { text: 'Direct REST examples', link: '/guide/rest' },
@@ -29,8 +32,10 @@ export default defineConfig({
         { text: 'Troubleshooting', link: '/guide/troubleshooting' }
       ] },
       { text: 'Reference', items: [
-        { text: 'POST /solve', link: '/reference/solve' },
-        { text: 'Errors and limits', link: '/reference/errors' }
+        { text: 'POST /v1/shape', link: '/reference/shape' },
+        { text: 'Errors and limits', link: '/reference/errors' },
+        { text: 'GET /v1/usage', link: '/reference/usage' },
+        { text: 'Migration', link: '/guide/migration' }
       ] }
     ],
     search: { provider: 'local' },

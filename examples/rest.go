@@ -1,63 +1,35 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-	"time"
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "time"
 )
 
-type SolveResult struct {
-	Status string `json:"status"`
-}
-
 func main() {
-	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func run() error {
-	key := os.Getenv("RAYON_API_KEY")
-	if key == "" {
-		return fmt.Errorf("set RAYON_API_KEY")
-	}
-	body, err := json.Marshal(map[string]string{
-		"target_url": "https://example.com/start",
-	})
-	if err != nil {
-		return err
-	}
-	req, err := http.NewRequest("POST", "https://api.rayonapi.com/solve", bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Authorization", "Bearer "+key)
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{
-		Timeout: 150 * time.Second,
-		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("RayonAPI request failed")
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("RayonAPI HTTP %d", resp.StatusCode)
-	}
-	var result SolveResult
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return fmt.Errorf("invalid RayonAPI response")
-	}
-	if result.Status != "accepted" {
-		return fmt.Errorf("capture status: %s", result.Status)
-	}
-	fmt.Println("Capture accepted")
-	return nil
+    body, err := os.ReadFile("shape-request.json")
+    if err != nil { panic("Read shape-request.json before calling the API") }
+    req, err := http.NewRequest("POST", "https://api.rayonapi.com/v1/shape", bytes.NewReader(body))
+    if err != nil { panic("Unable to build API request") }
+    req.Header.Set("Authorization", "Bearer " + os.Getenv("RAYON_API_KEY"))
+    req.Header.Set("Content-Type", "application/json")
+    transport := http.DefaultTransport.(*http.Transport).Clone()
+    transport.Proxy = nil
+    client := &http.Client{Timeout: 30 * time.Second, Transport: transport,
+        CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
+    defer client.CloseIdleConnections()
+    response, err := client.Do(req)
+    if err != nil { panic("API transport failed") }
+    defer response.Body.Close()
+    if response.StatusCode != http.StatusOK { panic(fmt.Sprintf("Generation failed: HTTP %d", response.StatusCode)) }
+    raw, err := io.ReadAll(io.LimitReader(response.Body, 256 * 1024 + 1))
+    if err != nil || len(raw) > 256 * 1024 { panic("Invalid API response size") }
+    var result struct { RequestID string `json:"request_id"`; Headers map[string]string `json:"headers"` }
+    if json.Unmarshal(raw, &result) != nil { panic("Invalid API response") }
+    fmt.Println("Generated request:", result.RequestID)
+    // Apply result.Headers using your existing target session and exact request.
 }
