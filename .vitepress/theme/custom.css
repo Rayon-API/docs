@@ -1,0 +1,31 @@
+:root {
+  --vp-c-brand-1: #087e8b;
+  --vp-c-brand-2: #076a75;
+  --vp-c-brand-3: #075b64;
+  --vp-c-brand-soft: rgba(8, 126, 139, 0.12);
+}
+
+.dark {
+  --vp-c-brand-1: #5ed9e5;
+  --vp-c-brand-2: #82e3ec;
+  --vp-c-brand-3: #b0f0f5;
+  --vp-c-brand-soft: rgba(94, 217, 229, 0.12);
+}
+
+::selection {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc a {
+  text-underline-offset: 3px;
+}
+
+.vp-doc table {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
+}
