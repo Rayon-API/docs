@@ -4,13 +4,7 @@ The [`rayon-sdk-py` repository](https://github.com/Rayon-API/rayon-sdk-py) provi
 
 ## Install
 
-Install from source while the registry release is pending:
-
-```sh
-python -m pip install "git+https://github.com/Rayon-API/rayon-sdk-py.git"
-```
-
-After version `0.1.0` is published to PyPI:
+Version `0.1.0` is available on [PyPI](https://pypi.org/project/rayon-sdk-py/):
 
 ```sh
 python -m pip install rayon-sdk-py==0.1.0

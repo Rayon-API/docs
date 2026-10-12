@@ -10,12 +10,12 @@ Use an environment variable such as `RAYON_API_KEY`. Keep keys out of URLs, sour
 
 ## Install an SDK
 
-The JavaScript SDK is available on npm. The Python PyPI release is pending; install its public source for now:
+Install the Python SDK from PyPI or the JavaScript SDK from npm:
 
 ::: code-group
 
 ```sh [Python]
-python -m pip install "git+https://github.com/Rayon-API/rayon-sdk-py.git"
+python -m pip install rayon-sdk-py==0.1.0
 ```
 
 ```sh [JavaScript]

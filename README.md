@@ -31,7 +31,7 @@ Deployment uses the repository's `github-pages` environment. No API credentials 
 
 ## Content boundaries
 
-Document only the public API contract and SDKs. Use fictional or redacted values; do not add private service code, internal addresses, telemetry captures, profile dumps, cookies, or API keys. The JavaScript SDK is published on npm; the pending Python release uses source installation for now.
+Document only the public API contract and SDKs. Use fictional or redacted values; do not add private service code, internal addresses, telemetry captures, profile dumps, cookies, or API keys. The Python SDK is published on PyPI and the JavaScript SDK on npm.
 
 ## License
 
