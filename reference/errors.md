@@ -1,6 +1,6 @@
 # Errors and limits
 
-HTTP status describes the API request. The JSON `status` describes the capture outcome. Check both.
+HTTP status describes the API request. The JSON `status` describes the capture outcome. Direct REST callers must check both; SDKs turn unsuccessful captures into exceptions.
 
 | HTTP status | Meaning | Action |
 | --- | --- | --- |
@@ -17,4 +17,4 @@ Quota accounting counts admitted solve attempts once, including failed attempts.
 
 The response may include `X-Request-ID` for correlation with dashboard history. Keep that identifier with a redacted diagnostic record.
 
-SDKs raise `RayonError` for request/API failures. A returned unsuccessful capture requires an explicit status check. For accepted results, `errors` may still contain earlier fallback diagnostics.
+For HTTP `200` responses with `failed` or `rejected` capture status, the Python SDK raises `SolveFailedError` (a `RayonError` subclass), and the JavaScript SDK throws `RayonError` with `kind: 'capture'`. Both SDKs return only accepted results. Handle these exceptions alongside request/API errors. For accepted results, `errors` may still contain earlier fallback diagnostics.

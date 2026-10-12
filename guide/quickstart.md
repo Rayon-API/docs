@@ -38,20 +38,23 @@ Replace the illustrative URL below with the real page that initiates your author
 
 ```python
 import os
-from rayon_sdk_py import solve
+from rayon_sdk_py import RayonError, SolveFailedError, solve
 
-result = solve(
-    "https://example.com/start",
-    os.environ["RAYON_API_KEY"],
-    timeout=150,
-)
-if result.status != "accepted":
-    raise RuntimeError(f"Capture did not complete: {result.status}")
+try:
+    result = solve(
+        "https://example.com/start",
+        os.environ["RAYON_API_KEY"],
+        timeout=150,
+    )
+except SolveFailedError:
+    raise SystemExit("Capture failed or was rejected")
+except RayonError:
+    raise SystemExit("API request failed; inspect the error safely")
 
 # Use result.headers and result.cookies in a scoped target client.
 ```
 
-An HTTP error and an unsuccessful capture are different outcomes. A valid HTTP `200` response can contain `status: "failed"`; always check the result status. A successful fallback can retain earlier diagnostics in `errors`.
+An HTTP error and an unsuccessful capture are different outcomes. A valid HTTP `200` response can contain `status: "failed"`. The SDK raises `SolveFailedError` for unsuccessful capture; direct REST callers must check the JSON status themselves. A successful fallback can retain earlier diagnostics in `errors`.
 
 ## Prepare the target client
 

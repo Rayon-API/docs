@@ -39,19 +39,19 @@ try {
     baseUrl: 'https://api.rayonapi.com',
     timeoutMs: 150_000,
   })
-  if (result.status !== 'accepted') {
-    throw new Error(`Capture status: ${result.status}`)
-  }
   // Keep result.headers and result.cookies within their target scope.
 } catch (error) {
   if (error instanceof RayonError) {
+    if (error.kind === 'capture') {
+      throw new Error('Capture failed or was rejected')
+    }
     throw new Error('API request failed; inspect the error safely')
   }
   throw error
 }
 ```
 
-`solve(url, key, { profile?, baseUrl?, timeoutMs? })` returns a promise of `SolveResult`. The package exports the `SolveResult` TypeScript type and `RayonError` class. Response fields retain their snake_case names, including `target_url`, `duration_ms`, and `profile_used`.
+`solve(url, key, { profile?, baseUrl?, timeoutMs? })` returns a promise of an accepted `SolveResult`. For an HTTP `200` response with `failed` or `rejected` capture status, it throws `RayonError` with `kind: 'capture'`. The package exports the `SolveResult` TypeScript type and `RayonError` class. Response fields retain their snake_case names, including `target_url`, `duration_ms`, and `profile_used`.
 
 `profile` is an optional JSON-compatible object. Omit it for the default. If it contains a `profile` key, that nested value must be a JSON object. `timeoutMs` controls the client timeout in milliseconds; `duration_ms` measures server solve execution, not total client elapsed time.
 

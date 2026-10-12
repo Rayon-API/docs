@@ -20,7 +20,7 @@ python -m pip install rayon-sdk-py==0.1.0
 
 ```python
 import os
-from rayon_sdk_py import RayonError, SolveResult, solve
+from rayon_sdk_py import RayonError, SolveFailedError, SolveResult, solve
 
 try:
     result: SolveResult = solve(
@@ -30,16 +30,15 @@ try:
         base_url="https://api.rayonapi.com",
         timeout=150,
     )
+except SolveFailedError:
+    raise SystemExit("Capture failed or was rejected")
 except RayonError:
     raise SystemExit("API request failed; inspect the error safely")
-
-if result.status != "accepted":
-    raise SystemExit(f"Capture status: {result.status}")
 
 # Preserve result.headers and the scope of result.cookies.
 ```
 
-`solve(url, key, profile=..., base_url=..., timeout=150)` returns `SolveResult`. `RayonError` represents SDK/API request errors; a returned `failed` or `rejected` capture must still be handled explicitly.
+`solve(url, key, profile=..., base_url=..., timeout=150)` returns an accepted `SolveResult`. For an HTTP `200` response with `failed` or `rejected` capture status, it raises `SolveFailedError`, a subclass of `RayonError`. Catch that exception separately from other SDK/API request errors when your application needs different recovery behavior.
 
 `profile` is an optional JSON-compatible mapping. Omit it to use the service default. If it contains a `profile` key, that nested value must be a JSON object. Keep your downstream client consistent with `profile_used`; the public contract does not otherwise promise a fixed profile-field schema.
 
