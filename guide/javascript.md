@@ -4,23 +4,7 @@ The [`rayon-sdk-js` repository](https://github.com/Rayon-API/rayon-sdk-js) provi
 
 ## Install
 
-Registry releases are pending. Build and package the source, then install its tarball in your application:
-
-```sh
-git clone https://github.com/Rayon-API/rayon-sdk-js.git
-cd rayon-sdk-js
-npm ci
-npm run build
-npm pack
-```
-
-Then, from your application directory, replace the path below with your checkout path:
-
-```sh
-npm install /path/to/rayon-sdk-js/rayon-sdk-js-0.1.0.tgz
-```
-
-After version `0.1.0` is published to npm:
+Version `0.1.0` is available on [npm](https://www.npmjs.com/package/rayon-sdk-js):
 
 ```sh
 npm install rayon-sdk-js@0.1.0
