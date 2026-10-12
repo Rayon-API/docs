@@ -41,7 +41,7 @@ if result.status != "accepted":
 
 `solve(url, key, profile=..., base_url=..., timeout=150)` returns `SolveResult`. `RayonError` represents SDK/API request errors; a returned `failed` or `rejected` capture must still be handled explicitly.
 
-`profile` is an optional JSON-compatible mapping. Omit it to use the service default. Keep your downstream client consistent with `profile_used`; the public contract does not promise a fixed profile-field schema.
+`profile` is an optional JSON-compatible mapping. Omit it to use the service default. If it contains a `profile` key, that nested value must be a JSON object. Keep your downstream client consistent with `profile_used`; the public contract does not otherwise promise a fixed profile-field schema.
 
 `timeout` is the client timeout in seconds. `duration_ms` is the server's solve execution time and excludes client-side connection setup, network latency, and response processing. See the [response reference](../reference/solve.md#response).
 

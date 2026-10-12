@@ -53,6 +53,6 @@ try {
 
 `solve(url, key, { profile?, baseUrl?, timeoutMs? })` returns a promise of `SolveResult`. The package exports the `SolveResult` TypeScript type and `RayonError` class. Response fields retain their snake_case names, including `target_url`, `duration_ms`, and `profile_used`.
 
-`profile` is an optional JSON-compatible object. Omit it for the default. `timeoutMs` controls the client timeout in milliseconds; `duration_ms` measures server solve execution, not total client elapsed time.
+`profile` is an optional JSON-compatible object. Omit it for the default. If it contains a `profile` key, that nested value must be a JSON object. `timeoutMs` controls the client timeout in milliseconds; `duration_ms` measures server solve execution, not total client elapsed time.
 
 The SDK's `undici` transport to RayonAPI does not provide browser-grade TLS for downstream target requests. Use a suitable target transport and apply the [core requirements](./requirements.md).

@@ -21,6 +21,8 @@ Keep the API key in the authorization header, never in a URL or log. Target doma
 | `target_url` | string | Yes | Actual source-page URL for the target workflow. Must be a valid public HTTP(S) URL without embedded credentials, on an approved domain. |
 | `profile` | object | No | JSON-compatible fingerprint fields. Omit for the service default. |
 
+When `profile` contains a `profile` key, that nested value must be a JSON object. A string, array, or `null` at `profile.profile` is invalid. The public contract does not otherwise promise a fixed profile-field schema.
+
 The public contract exposes no downstream endpoint URL, method, body, or proxy controls. Do not add request-binding parameters. `/verify` is not a public endpoint.
 
 ## Response

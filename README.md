@@ -21,7 +21,7 @@ npm run preview
 
 `npm run check` validates local links, code-fence balance, JSON blocks, Python/JavaScript syntax, and the Go REST example. `npm run build` builds the site and checks Markdown links. Source examples are included in the rendered docs, so the checked files are the examples readers see.
 
-VitePress 1.6.4 currently inherits development-tool advisories from Vite and esbuild. The deployment contains static files only; keep development and preview servers bound to localhost. Review dependency updates before changing the pinned framework version.
+VitePress remains pinned to 1.6.4. A tested override pins Vite to patched version 6.4.4 until the upstream stable dependency moves; this also updates esbuild. Recheck the build, preview, search, and `npm audit` before changing or removing the override.
 
 ## GitHub Pages
 
