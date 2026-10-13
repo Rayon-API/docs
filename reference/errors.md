@@ -11,12 +11,12 @@ Every API error uses a sanitized JSON envelope and `X-Request-ID`:
 | 401 | Missing, invalid or revoked API key. |
 | 403 | Account, policy or domain access denied. |
 | 404 / 405 | Unknown route / unsupported method. |
+| 408 | `input_timeout`: upload exceeded the 20-second deadline; no generation quota consumed. |
 | 410 | `api_retired`: URL-only `/solve` has been retired. |
 | 413 | `input_too_large`. |
 | 415 | Unsupported content type or content encoding. |
 | 422 | Invalid request, unsupported material/profile, expired material or ambiguous header family. |
 | 429 | Rate, quota or available generation capacity exceeded. Inspect `Retry-After`. |
-| 500 | Internal error; retain the request ID for support. |
 | 503 | Service or generation worker unavailable. |
 | 504 | Generation timed out. |
 

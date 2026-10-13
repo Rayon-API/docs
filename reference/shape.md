@@ -41,7 +41,7 @@ No target cookies are returned. Generation success is distinct from target accep
 
 | Input | Maximum |
 | --- | --- |
-| Decoded JSON request | 4 MiB |
+| Decoded JSON request | 4 MiB; 4,096 structural nodes/member names |
 | Script source total / individual | 3 MiB / 2 MiB |
 | Scripts | 16 |
 | Request body | 256 KiB UTF-8 |
@@ -50,4 +50,4 @@ No target cookies are returned. Generation success is distinct from target accep
 | Each URL | 8,192 characters |
 | Response | 256 KiB |
 
-Both compressed and decoded limits apply to gzip requests. See [errors](./errors.md) for failure codes and [usage](./usage.md) for accounting.
+Uploads have a 20-second deadline. Concurrent uploads and generation requests are bounded; excess capacity returns 429 without waiting in a generation queue. Both compressed and decoded limits apply to gzip requests. See [errors](./errors.md) for failure codes and [usage](./usage.md) for accounting.
