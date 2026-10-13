@@ -8,6 +8,7 @@ Every API error uses a sanitized JSON envelope and `X-Request-ID`:
 
 | HTTP | Meaning |
 | --- | --- |
+| 402 | `insufficient_credits`: available generation allowance exhausted. |
 | 401 | Missing, invalid or revoked API key. |
 | 403 | Account, policy or domain access denied. |
 | 404 / 405 | Unknown route / unsupported method. |
@@ -16,7 +17,7 @@ Every API error uses a sanitized JSON envelope and `X-Request-ID`:
 | 413 | `input_too_large`. |
 | 415 | Unsupported content type or content encoding. |
 | 422 | Invalid request, unsupported material/profile, expired material or ambiguous header family. |
-| 429 | Rate, quota or available generation capacity exceeded. Inspect `Retry-After`. |
+| 429 | Request rate or available generation capacity exceeded. Inspect `Retry-After`. |
 | 503 | Service or generation worker unavailable. |
 | 504 | Generation timed out. |
 

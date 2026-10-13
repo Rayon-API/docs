@@ -12,7 +12,7 @@ For HTTP 429, inspect `error.code` and `Retry-After`. Available execution slots 
 
 ## Timeout
 
-The default SDK timeout is 45 seconds (version 1.0.1 onward) for the whole API exchange. Server execution has a shorter bounded deadline. Upload time and network latency contribute to client-visible time. A timeout or cancellation can still consume an admitted attempt.
+The default SDK timeout is 45 seconds (version 1.0.1 onward) for the whole API exchange. Server execution has a shorter bounded deadline. Upload time and network latency contribute to client-visible time. A client timeout can happen after successful generation and credit settlement. Inspect usage and request history before retrying.
 
 ## Generated headers but target rejected
 
