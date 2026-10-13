@@ -3,21 +3,46 @@
 Use the target session that downloaded the protection material. It already owns the cookies and proxy configuration for that workflow.
 
 ```python
+from urllib.parse import urlsplit
+
+def https_origin(url):
+    parsed = urlsplit(url)
+    if (parsed.scheme != "https" or not parsed.hostname
+            or parsed.username is not None or parsed.password is not None
+            or parsed.fragment):
+        raise ValueError("Use an HTTPS URL without credentials or fragments")
+    port = parsed.port if parsed.port is not None else 443
+    if not 1 <= port <= 65535:
+        raise ValueError("Use a valid HTTPS port")
+    return (parsed.hostname.lower(), port)
+
+# Configure these explicitly for your approved integration, including API subdomains.
+allowed_origins = {
+    https_origin("https://shop.example.com"),
+    https_origin("https://api.shop.example.com"),
+}
+request = shape["request"]
+if https_origin(request["url"]) not in allowed_origins:
+    raise ValueError("Endpoint origin is not allowed by this integration")
+body = request["body"]
 headers = {
     **application_headers,
     **result.headers,
     "User-Agent": profile["user_agent"],
-    "Content-Type": shape["request"]["content_type"],
 }
+if request["content_type"] is not None:
+    headers["Content-Type"] = request["content_type"]
 response = target_session.request(
-    shape["request"]["method"],
-    shape["request"]["url"],
-    data=shape["request"]["body"],
+    request["method"],
+    request["url"],
+    data=body.encode("utf-8") if body is not None else None,
     headers=headers,
     allow_redirects=False,
     timeout=30,
 )
 ```
+
+Source and endpoint domains can differ when both have approved access. Use an explicit HTTPS origin allowlist, not a wildcard suffix check. Keep cookies in the scoped cookie jar; a cookie for the source host must not be manually forwarded to a different API host. Disable redirects so credentials cannot follow a request to an unapproved destination.
 
 `application_headers` includes the target's required Origin, Referer, CSRF or application authentication fields. Keep these separate from the RayonAPI key. Never forward `Authorization: Bearer <RayonAPI key>` to the target.
 

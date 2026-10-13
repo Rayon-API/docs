@@ -1,0 +1,972 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Rayon API",
+    "version": "1.0.0",
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Admitted generation attempts count once, including execution failures; validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. UTC quota resets. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+  },
+  "servers": [
+    {
+      "url": "https://api.rayonapi.com"
+    }
+  ],
+  "paths": {
+    "/v1/shape": {
+      "post": {
+        "summary": "Generate Shape headers from supplied material",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShapeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "unauthorized",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "access_denied, policies_required or domain_not_approved",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "input_too_large",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "unsupported_encoding or unsupported_media_type",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "invalid_input, unsupported_profile, unsupported_material or material_expired",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited, daily_quota_exceeded, monthly_quota_exceeded, concurrency_exceeded or capacity_exceeded",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "generation_unavailable",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "generation_timeout",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Generated headers",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShapeResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "input_timeout; upload deadline exceeded without generation charge",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/usage": {
+      "get": {
+        "summary": "Read usage and limits without generation charge",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "access_denied",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "rate_limited",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "generation_unavailable",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solve": {
+      "post": {
+        "summary": "Retired URL mode",
+        "responses": {
+          "410": {
+            "description": "api_retired; migrate to https://docs.rayonapi.com/guide/migration",
+            "headers": {
+              "X-Request-ID": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "BrowserProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "user_agent": {
+            "default": "Mozilla/5.0",
+            "maxLength": 8192,
+            "title": "User Agent",
+            "type": "string"
+          },
+          "platform": {
+            "default": "MacIntel",
+            "maxLength": 8192,
+            "title": "Platform",
+            "type": "string"
+          },
+          "language": {
+            "default": "en-US",
+            "maxLength": 8192,
+            "title": "Language",
+            "type": "string"
+          },
+          "languages": {
+            "default": [
+              "en-US",
+              "en"
+            ],
+            "items": {
+              "maxLength": 8192,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Languages",
+            "type": "array"
+          },
+          "screen": {
+            "$ref": "#/components/schemas/Screen"
+          },
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "webgl": {
+            "$ref": "#/components/schemas/WebGL"
+          },
+          "canvas": {
+            "$ref": "#/components/schemas/Canvas"
+          },
+          "navigator": {
+            "$ref": "#/components/schemas/Navigator"
+          }
+        },
+        "title": "BrowserProfile",
+        "type": "object"
+      },
+      "Canvas": {
+        "additionalProperties": false,
+        "properties": {
+          "data_url": {
+            "default": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=",
+            "title": "Data Url",
+            "type": "string",
+            "description": "Valid PNG data URL with bounded strict base64, CRC-checked chunks and image stream; each dimension at most 8192, at most 16 Mi pixels. Full effective profile stays within 64 KiB UTF-8."
+          }
+        },
+        "title": "Canvas",
+        "type": "object"
+      },
+      "Navigator": {
+        "additionalProperties": false,
+        "properties": {
+          "userAgent": {
+            "default": "Mozilla/5.0",
+            "maxLength": 8192,
+            "title": "Useragent",
+            "type": "string"
+          },
+          "platform": {
+            "default": "MacIntel",
+            "maxLength": 8192,
+            "title": "Platform",
+            "type": "string"
+          },
+          "vendor": {
+            "default": "Google Inc.",
+            "maxLength": 8192,
+            "title": "Vendor",
+            "type": "string"
+          },
+          "appVersion": {
+            "default": "5.0",
+            "maxLength": 8192,
+            "title": "Appversion",
+            "type": "string"
+          },
+          "appCodeName": {
+            "default": "Mozilla",
+            "maxLength": 8192,
+            "title": "Appcodename",
+            "type": "string"
+          },
+          "appName": {
+            "default": "Netscape",
+            "maxLength": 8192,
+            "title": "Appname",
+            "type": "string"
+          },
+          "product": {
+            "default": "Gecko",
+            "maxLength": 8192,
+            "title": "Product",
+            "type": "string"
+          },
+          "language": {
+            "default": "en-US",
+            "maxLength": 8192,
+            "title": "Language",
+            "type": "string"
+          },
+          "languages": {
+            "default": [
+              "en-US",
+              "en"
+            ],
+            "items": {
+              "maxLength": 8192,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Languages",
+            "type": "array"
+          },
+          "hardwareConcurrency": {
+            "default": 8,
+            "maximum": 1024,
+            "minimum": 1,
+            "title": "Hardwareconcurrency",
+            "type": "integer"
+          },
+          "maxTouchPoints": {
+            "default": 0,
+            "maximum": 100,
+            "minimum": 0,
+            "title": "Maxtouchpoints",
+            "type": "integer"
+          },
+          "webdriver": {
+            "default": false,
+            "title": "Webdriver",
+            "type": "boolean"
+          },
+          "cookieEnabled": {
+            "default": true,
+            "title": "Cookieenabled",
+            "type": "boolean"
+          },
+          "doNotTrack": {
+            "anyOf": [
+              {
+                "maxLength": 8192,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Donottrack"
+          }
+        },
+        "title": "Navigator",
+        "type": "object"
+      },
+      "RequestContext": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          }
+        },
+        "required": [
+          "url",
+          "method",
+          "content_type",
+          "body"
+        ],
+        "title": "RequestContext",
+        "type": "object"
+      },
+      "Screen": {
+        "additionalProperties": false,
+        "properties": {
+          "width": {
+            "default": 1920,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Width",
+            "type": "integer"
+          },
+          "height": {
+            "default": 1080,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Height",
+            "type": "integer"
+          },
+          "availWidth": {
+            "default": 1920,
+            "maximum": 32768,
+            "minimum": 0,
+            "title": "Availwidth",
+            "type": "integer"
+          },
+          "availHeight": {
+            "default": 1040,
+            "maximum": 32768,
+            "minimum": 0,
+            "title": "Availheight",
+            "type": "integer"
+          },
+          "colorDepth": {
+            "default": 24,
+            "maximum": 64,
+            "minimum": 1,
+            "title": "Colordepth",
+            "type": "integer"
+          },
+          "pixelDepth": {
+            "default": 24,
+            "maximum": 64,
+            "minimum": 1,
+            "title": "Pixeldepth",
+            "type": "integer"
+          }
+        },
+        "title": "Screen",
+        "type": "object"
+      },
+      "Script": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "source"
+        ],
+        "title": "Script",
+        "type": "object"
+      },
+      "WebGL": {
+        "additionalProperties": false,
+        "properties": {
+          "renderer": {
+            "default": "Sandbox Renderer",
+            "maxLength": 8192,
+            "title": "Renderer",
+            "type": "string"
+          },
+          "vendor": {
+            "default": "Google Inc.",
+            "maxLength": 8192,
+            "title": "Vendor",
+            "type": "string"
+          }
+        },
+        "title": "WebGL",
+        "type": "object"
+      },
+      "Window": {
+        "additionalProperties": false,
+        "properties": {
+          "innerWidth": {
+            "default": 1920,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Innerwidth",
+            "type": "integer"
+          },
+          "innerHeight": {
+            "default": 1040,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Innerheight",
+            "type": "integer"
+          },
+          "outerWidth": {
+            "default": 1920,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Outerwidth",
+            "type": "integer"
+          },
+          "outerHeight": {
+            "default": 1080,
+            "maximum": 32768,
+            "minimum": 1,
+            "title": "Outerheight",
+            "type": "integer"
+          },
+          "devicePixelRatio": {
+            "default": 1.0,
+            "maximum": 16,
+            "minimum": 0.1,
+            "title": "Devicepixelratio",
+            "type": "number"
+          },
+          "screenX": {
+            "default": 0,
+            "title": "Screenx",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "screenY": {
+            "default": 0,
+            "title": "Screeny",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "screenLeft": {
+            "default": 0,
+            "title": "Screenleft",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "screenTop": {
+            "default": 0,
+            "title": "Screentop",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "pageXOffset": {
+            "default": 0,
+            "title": "Pagexoffset",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          },
+          "pageYOffset": {
+            "default": 0,
+            "title": "Pageyoffset",
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+          }
+        },
+        "title": "Window",
+        "type": "object"
+      },
+      "ShapeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "source_url": {
+            "title": "Source Url",
+            "type": "string",
+            "description": "Context only; never fetched. Required for uploads and references; must match cached source URL."
+          },
+          "scripts": {
+            "items": {
+              "$ref": "#/components/schemas/Script"
+            },
+            "maxItems": 16,
+            "minItems": 1,
+            "type": "array",
+            "description": "Ordered client-supplied scripts. At most 16; 2 MiB each and 3 MiB total UTF-8 source."
+          },
+          "material_ref": {
+            "maxLength": 128,
+            "minLength": 16,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/BrowserProfile"
+          },
+          "request": {
+            "$ref": "#/components/schemas/RequestContext"
+          },
+          "document_cookie": {
+            "default": "",
+            "title": "Document Cookie",
+            "type": "string",
+            "description": "JavaScript-visible cookies only, at most 16 KiB; never retained in material cache."
+          }
+        },
+        "required": [
+          "source_url",
+          "profile",
+          "request"
+        ],
+        "title": "ShapeRequest",
+        "type": "object",
+        "oneOf": [
+          {
+            "required": [
+              "scripts"
+            ],
+            "not": {
+              "required": [
+                "material_ref"
+              ]
+            }
+          },
+          {
+            "required": [
+              "material_ref"
+            ],
+            "not": {
+              "required": [
+                "scripts"
+              ]
+            }
+          }
+        ]
+      },
+      "ShapeResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "headers",
+          "request_id",
+          "generation_ms",
+          "profile_used",
+          "material_ref",
+          "material_expires_at"
+        ],
+        "properties": {
+          "headers": {
+            "type": "object",
+            "minProperties": 6,
+            "maxProperties": 6,
+            "patternProperties": {
+              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-[abcdfz]$": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family. Header names use valid HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty. Generation does not assert target acceptance."
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "generation_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "profile_used": {
+            "$ref": "#/components/schemas/BrowserProfile",
+            "description": "Effective supported browser identity; canvas pixels and document cookies are excluded."
+          },
+          "material_ref": {
+            "type": "string"
+          },
+          "material_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Five-minute immutable material expiry, UTC. References are scoped to this API key."
+          }
+        }
+      },
+      "UsageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "request_id",
+          "daily_used",
+          "monthly_used",
+          "limits",
+          "resets_at"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "daily_used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "monthly_used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limits": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rpm",
+              "burst",
+              "daily_quota",
+              "monthly_quota",
+              "concurrency"
+            ],
+            "properties": {
+              "rpm": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "burst": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "daily_quota": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "monthly_quota": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "concurrency": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "resets_at": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "daily",
+              "monthly"
+            ],
+            "properties": {
+              "daily": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "monthly": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message",
+              "request_id"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "request_id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

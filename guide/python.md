@@ -1,5 +1,7 @@
 # Python SDK
 
+Requires Python 3.10 or later. Sync and async clients share the same request contract.
+
 ```sh
 python -m pip install 'rayon-sdk-py>=1.0,<2'
 ```
@@ -12,7 +14,7 @@ import os
 from pathlib import Path
 from rayon_sdk_py import Client
 
-shape = json.loads(Path("shape-request.json").read_text())
+shape = json.loads(Path("shape-request.json").read_text(encoding="utf-8"))
 with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
     result = client.generate(shape)
     usage = client.usage()
@@ -33,3 +35,9 @@ async def generate_headers(shape, api_key):
 The SDK exposes typed request/result models, validates response structure and raises structured errors for unsuccessful HTTP responses. It does not fetch target material or retry generation automatically. Close clients when finished to release connections.
 
 `result.generation_ms` is server-side generation time. Measure elapsed time around `client.generate()` for the full latency your application sees, including upload and network time.
+
+## Material reuse and profiles
+
+The persistent client remembers unexpired material references when you repeat the same ordered scripts. Each generation still uses fresh request, profile and cookie inputs. Keep your source files: eviction or a server restart can invalidate a reference before its five-minute expiry. A failed POST is not automatically retried.
+
+Use `validate_profile(profile)` for offline validation. The one-shot `generate(shape, api_key)` helper closes its connection after the call; reuse `Client` or `AsyncClient` for repeated requests. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for options and error types.

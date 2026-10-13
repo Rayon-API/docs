@@ -4,6 +4,8 @@ Download material with your existing target session, through the same sticky pro
 
 Identify the protection loader and payload for the workflow you are integrating. Keep only their required dependencies, in execution order. Do not upload the whole site's application bundle or assume any script on the page is a protection script.
 
+For a first integration, follow the [preparation walkthrough](./preparation-walkthrough.md) to select scripts and measure your browser profile.
+
 Each script needs its exact URL and full decoded source text. Preserve query parameters, including seeds. A payload that depends on a loader needs both. The API rejects unsupported or incomplete bundles; it does not fetch missing dependencies.
 
 For example, your client can download explicitly selected script URLs:

@@ -27,7 +27,9 @@ Supported groups:
 | `canvas` | `data_url`: a PNG data URL for actual captured pixels |
 | `navigator` | userAgent, platform, vendor, appVersion, appCodeName, appName, product, language, languages, hardwareConcurrency, maxTouchPoints, webdriver, cookieEnabled, doNotTrack |
 
-Unknown fields and conflicting top-level/navigator aliases are rejected. Numeric fields have explicit bounds. Full limits and types are defined by the API schema.
+Unknown fields and conflicting top-level/navigator aliases are rejected. Most identity strings allow up to 8,192 Unicode characters; language lists contain 1–32 strings. Screen/window dimensions are 1–32,768; available screen dimensions may be zero. Coordinates are signed 32-bit integers, devicePixelRatio is 0.1–16, hardwareConcurrency is 1–1,024, maxTouchPoints is 0–100, and color/pixel depths are 1–64. The effective profile, including defaults and aliases, must fit 64 KiB. See the [product schema](https://docs.rayonapi.com/schema/shape-v1.openapi.json) for exact field types.
+
+Both SDKs expose `validate_profile(profile)` for offline validation. It returns a deep copy of your supplied fields without measuring the browser or filling omitted values.
 
 Omitted fields use emulation defaults. These defaults are not observations about your real client and may be unsuitable for a target workflow. Supply measured values when relevant; changing only the User-Agent does not create a matching complete browser profile.
 

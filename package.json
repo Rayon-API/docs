@@ -8,7 +8,7 @@
     "build": "vitepress build .",
     "preview": "vitepress preview .",
     "check": "node scripts/check-docs.mjs",
-    "test": "npm run check && npm run build"
+    "test": "node --test scripts/test-examples.mjs && npm run check && npm run build"
   },
   "engines": { "node": ">=22 <23" },
   "devDependencies": { "vitepress": "1.6.4" },

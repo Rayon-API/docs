@@ -5,7 +5,10 @@ Send JSON to `https://api.rayonapi.com/v1/shape` with `Authorization: Bearer <ke
 Prepare `shape-request.json` using the [material guide](./material.md). Then:
 
 ```sh
-curl --fail-with-body --max-time 30   https://api.rayonapi.com/v1/shape   -H "Authorization: Bearer $RAYON_API_KEY"   -H 'Content-Type: application/json'   --data-binary @shape-request.json
+curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
+  -H "Authorization: Bearer $RAYON_API_KEY" \
+  -H 'Content-Type: application/json' \
+  --data-binary @shape-request.json
 ```
 
 Do not put API keys in URLs. Use uncompressed JSON first; gzip request bodies must also meet the decoded-size limit.

@@ -42,8 +42,8 @@ import os
 from pathlib import Path
 from rayon_sdk_py import Client
 
-material = json.loads(Path("material.json").read_text())
-profile = json.loads(Path("profile.json").read_text())
+material = json.loads(Path("material.json").read_text(encoding="utf-8"))
+profile = json.loads(Path("profile.json").read_text(encoding="utf-8"))
 body = json.dumps({"username": "example_user"}, separators=(",", ":"))
 shape = {
     **material,

@@ -23,6 +23,7 @@ export default defineConfig({
       ] },
       { text: 'Integrate', items: [
         { text: 'Prepare material', link: '/guide/material' },
+        { text: 'First integration', link: '/guide/preparation-walkthrough' },
         { text: 'Browser profiles', link: '/guide/profiles' },
         { text: 'Apply headers', link: '/guide/applying-headers' },
         { text: 'Python SDK', link: '/guide/python' },

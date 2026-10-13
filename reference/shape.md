@@ -6,6 +6,8 @@ Generate one fresh Shape header family from client-supplied protection material.
 **Authentication:** `Authorization: Bearer <api_key>`  
 **Content type:** `application/json`
 
+[Download the OpenAPI product schema](https://docs.rayonapi.com/schema/shape-v1.openapi.json). This static document describes the customer contract; it does not expose server debug or testing routes.
+
 ## Request
 
 | Field | Requirement |
