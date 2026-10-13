@@ -13,7 +13,7 @@ from pathlib import Path
 from rayon_sdk_py import Client
 
 shape = json.loads(Path("shape-request.json").read_text())
-with Client(os.environ["RAYON_API_KEY"], timeout=30) as client:
+with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
     result = client.generate(shape)
     usage = client.usage()
 ```
@@ -26,7 +26,7 @@ For asynchronous applications:
 from rayon_sdk_py import AsyncClient
 
 async def generate_headers(shape, api_key):
-    async with AsyncClient(api_key, timeout=30) as client:
+    async with AsyncClient(api_key, timeout=45) as client:
         return await client.generate(shape)
 ```
 

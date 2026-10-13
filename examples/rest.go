@@ -19,7 +19,7 @@ func main() {
     req.Header.Set("Content-Type", "application/json")
     transport := http.DefaultTransport.(*http.Transport).Clone()
     transport.Proxy = nil
-    client := &http.Client{Timeout: 30 * time.Second, Transport: transport,
+    client := &http.Client{Timeout: 45 * time.Second, Transport: transport,
         CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
     defer client.CloseIdleConnections()
     response, err := client.Do(req)

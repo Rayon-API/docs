@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises'
 import { RayonClient } from 'rayon-sdk-js'
 
 const shape = JSON.parse(await readFile('shape-request.json', 'utf8'))
-const client = new RayonClient(process.env.RAYON_API_KEY, { timeoutMs: 30000 })
+const client = new RayonClient(process.env.RAYON_API_KEY, { timeoutMs: 45000 })
 try {
   const result = await client.generate(shape)
   const usage = await client.usage()

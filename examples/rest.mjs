@@ -5,7 +5,7 @@ const response = await fetch('https://api.rayonapi.com/v1/shape', {
   headers: { authorization: `Bearer ${process.env.RAYON_API_KEY}`, 'content-type': 'application/json' },
   body,
   redirect: 'error',
-  signal: AbortSignal.timeout(30000)
+  signal: AbortSignal.timeout(45000)
 })
 if (!response.ok) throw new Error(`Generation failed: HTTP ${response.status}`)
 const result = await response.json()
