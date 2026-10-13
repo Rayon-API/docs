@@ -2,6 +2,8 @@
 
 Return your authenticated account's current usage, limits and UTC reset times.
 
+Generation requests are capped at **15 requests per second per account**, shared across all its API keys. Lower account rates, concurrency and usage allowances apply separately.
+
 ```sh
 curl --fail-with-body --max-time 30   https://api.rayonapi.com/v1/usage   -H "Authorization: Bearer $RAYON_API_KEY"
 ```
@@ -14,8 +16,8 @@ This utility does not generate headers or consume generation quota. A separate r
   "daily_used": 12,
   "monthly_used": 48,
   "limits": {
-    "rpm": 10,
-    "burst": 10,
+    "rpm": 900,
+    "burst": 15,
     "daily_quota": 1000,
     "monthly_quota": 10000,
     "concurrency": 2
