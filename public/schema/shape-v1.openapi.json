@@ -3,7 +3,7 @@
   "info": {
     "title": "Rayon API",
     "version": "1.0.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Admitted generation attempts count once, including execution failures; validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. UTC quota resets. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved credit. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Prepaid calls do not expire. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
   },
   "servers": [
     {
@@ -121,7 +121,7 @@
             }
           },
           "429": {
-            "description": "rate_limited, daily_quota_exceeded, monthly_quota_exceeded, concurrency_exceeded or capacity_exceeded",
+            "description": "rate_limited, concurrency_exceeded or capacity_exceeded",
             "headers": {
               "X-Request-ID": {
                 "schema": {
@@ -208,6 +208,16 @@
                 }
               }
             },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "insufficient_credits: available generation allowance exhausted",
             "content": {
               "application/json": {
                 "schema": {
@@ -866,10 +876,8 @@
         "additionalProperties": false,
         "required": [
           "request_id",
-          "daily_used",
-          "monthly_used",
           "limits",
-          "resets_at"
+          "allowance"
         ],
         "properties": {
           "request_id": {
@@ -878,60 +886,78 @@
           },
           "daily_used": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Legacy admitted-attempt analytics only; no daily or monthly cap is enforced.",
+            "deprecated": true
           },
           "monthly_used": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Legacy admitted-attempt analytics only; no daily or monthly cap is enforced.",
+            "deprecated": true
           },
           "limits": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "rpm",
-              "burst",
-              "daily_quota",
-              "monthly_quota",
-              "concurrency"
+              "requests_per_second"
             ],
             "properties": {
-              "rpm": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "burst": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "daily_quota": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "monthly_quota": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "concurrency": {
-                "type": "integer",
-                "minimum": 1
+              "requests_per_second": {
+                "type": "number",
+                "minimum": 0.016666666666666666,
+                "maximum": 15
               }
             }
           },
-          "resets_at": {
+          "allowance": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "daily",
-              "monthly"
+              "kind",
+              "weekly_limit",
+              "weekly_used",
+              "weekly_remaining",
+              "weekly_resets_at",
+              "prepaid_remaining"
             ],
             "properties": {
-              "daily": {
+              "kind": {
                 "type": "string",
+                "enum": [
+                  "owner",
+                  "custom",
+                  "subscription",
+                  "prepaid"
+                ]
+              },
+              "weekly_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "weekly_used": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Spent and currently reserved calls in the current allowance period."
+              },
+              "weekly_remaining": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "weekly_resets_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "format": "date-time"
               },
-              "monthly": {
-                "type": "string",
-                "format": "date-time"
+              "prepaid_remaining": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Non-expiring purchased credits; no weekly cap."
               }
             }
           }
