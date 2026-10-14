@@ -8,7 +8,7 @@
     "build": "vitepress build .",
     "preview": "vitepress preview .",
     "check": "node scripts/check-docs.mjs",
-    "test": "node --test scripts/test-legacy.mjs scripts/test-profile.mjs scripts/test-examples.mjs && npm run check && npm run build && CHECK_BUILD=1 node --test scripts/test-legacy.mjs"
+    "test": "node --test scripts/test-legacy.mjs scripts/test-profile.mjs scripts/test-examples.mjs scripts/test-form.mjs && npm run check && npm run build && CHECK_BUILD=1 node --test scripts/test-legacy.mjs"
   },
   "engines": {
     "node": ">=22 <23"

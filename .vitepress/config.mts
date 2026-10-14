@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path'
 
 export default defineConfig({
   title: 'RayonAPI',
-  description: 'Material-only Shape header generation API and SDK documentation.',
+  description: 'Material-only Shape header and form telemetry API and SDK documentation.',
   base: process.env.DOCS_BASE_PATH || '/',
   srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md', 'SECURITY.md', 'CHANGELOG.md'],
   cleanUrls: true,
@@ -36,6 +36,7 @@ export default defineConfig({
         { text: 'Download scripts', link: '/guide/material' },
         { text: 'Browser profiles', link: '/guide/profiles' },
         { text: 'Apply headers', link: '/guide/applying-headers' },
+        { text: 'Form payload integration', link: '/form-payload-integration' },
         { text: 'Python SDK', link: '/guide/python' },
         { text: 'JavaScript SDK', link: '/guide/javascript' },
         { text: 'Direct REST examples', link: '/guide/rest' },

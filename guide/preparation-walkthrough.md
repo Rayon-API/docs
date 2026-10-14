@@ -76,3 +76,5 @@ This validates inputs offline. Add `--fetch-and-generate` to collect material an
 Optional inputs: `--cookies-file local/cookies.txt` imports a scoped Netscape HTTP cookie jar; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Preserve export metadata where available; the transport does not retain every browser attribute. Keep the separate document-cookie snapshot consistent with cookies updated during collection.
 
 The helper allows the source page's HTTPS origin by default. For another approved endpoint origin, add `--allow-request-origin https://api.shop.example.com` (repeat for each origin). Use an origin without path/query; the jar preserves cookie scope across hosts. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.
+
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
