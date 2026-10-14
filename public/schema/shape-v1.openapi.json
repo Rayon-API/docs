@@ -3,7 +3,7 @@
   "info": {
     "title": "Rayon API",
     "version": "1.0.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved credit. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Prepaid calls do not expire. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Weekly calls are consumed first, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
   },
   "servers": [
     {
@@ -342,7 +342,7 @@
         "summary": "Retired URL mode",
         "responses": {
           "410": {
-            "description": "api_retired; migrate to https://docs.rayonapi.com/guide/migration",
+            "description": "api_retired; migrate to https://docs.rayonapi.com/migration",
             "headers": {
               "X-Request-ID": {
                 "schema": {
@@ -919,7 +919,9 @@
               "weekly_used",
               "weekly_remaining",
               "weekly_resets_at",
-              "prepaid_remaining"
+              "prepaid_remaining",
+              "wallet",
+              "payg_rate_per_1000_usd"
             ],
             "properties": {
               "kind": {
@@ -928,7 +930,8 @@
                   "owner",
                   "custom",
                   "subscription",
-                  "prepaid"
+                  "prepaid",
+                  "wallet"
                 ]
               },
               "weekly_limit": {
@@ -957,7 +960,44 @@
               "prepaid_remaining": {
                 "type": "integer",
                 "minimum": 0,
-                "description": "Non-expiring purchased credits; no weekly cap."
+                "description": "Deprecated standard-rate call equivalent of available wallet funds ($5 per 1,000); use wallet.balance_usd and the current PAYG rate. Deferred legacy conversions may still expose their original call count.",
+                "deprecated": true
+              },
+              "wallet": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "balance_usd",
+                  "balance_micro_usd"
+                ],
+                "properties": {
+                  "balance_usd": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Available preloaded USD wallet funds."
+                  },
+                  "balance_micro_usd": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Exact available balance in millionths of one USD."
+                  }
+                }
+              },
+              "payg_rate_per_1000_usd": {
+                "type": "number",
+                "enum": [
+                  5,
+                  3.5,
+                  2.5,
+                  2,
+                  1.5
+                ],
+                "description": "Standard PAYG or the newest eligible paid period rate per 1,000 successful generations, after weekly allowance."
+              },
+              "legacy_prepaid_deprecated": {
+                "type": "boolean",
+                "const": true,
+                "description": "Legacy prepaid-call fields are deprecated; display authoritative wallet funds."
               }
             }
           }
