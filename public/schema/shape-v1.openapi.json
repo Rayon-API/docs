@@ -833,7 +833,8 @@
                     },
                     "content_type": {
                       "type": "string",
-                      "description": "application/x-www-form-urlencoded, optionally with one UTF-8 charset parameter."
+                      "description": "application/x-www-form-urlencoded, optionally with one UTF-8 charset parameter.",
+                      "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[xX]-[wW][wW][wW]-[fF][oO][rR][mM]-[uU][rR][lL][eE][nN][cC][oO][dD][eE][dD](?:\\s*;\\s*[cC][hH][aA][rR][sS][eE][tT]\\s*=\\s*(?:\"[uU][tT][fF]-?8\"|[uU][tT][fF]-?8))?\\s*$"
                     },
                     "body": {
                       "type": "string",
