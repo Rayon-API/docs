@@ -61,3 +61,58 @@ test('public schema separates form output and applies conditional input types', 
   assert.match(definitions.FormShapeResponse.properties.form_body.description, /Telemetry only/);
   assert.match(definitions.FormShapeResponse.properties.form_body.description, /no application fields/);
 });
+
+test('direct REST continuation preserves exact form bytes and the existing target session offline', () => {
+  const code = readFileSync(new URL('../examples/form-rest.py', import.meta.url), 'utf8');
+  assert(guide().includes(code.trim()));
+  const checks = `
+import io, json, os, tempfile, urllib.request
+from pathlib import Path
+from types import SimpleNamespace
+os.environ['RAYON_API_KEY'] = 'offline-api-key'
+body='item=first&item=second&empty=&csrf=a%2Bb&submit=continue&name=caf%C3%A9'
+telemetry='site-fielda=a%2Bb&site-fieldb=b&site-fieldc=c&site-fieldd=&site-fieldf=f&site-fieldz=z'
+api_calls=[]
+def api_send(request, timeout):
+    api_calls.append(request)
+    return io.BytesIO(json.dumps(dict(form_body=telemetry, profile_used={'user_agent':'fixture-UA'}, request_id='fixture')).encode())
+urllib.request.urlopen=api_send
+class TargetSession:
+    def __init__(self): self.calls=[]; self.cookies={'session':'client-only'}
+    def request(self, *args, **kwargs):
+        self.calls.append((args, kwargs))
+        return SimpleNamespace(status_code=200)
+session=TargetSession()
+with tempfile.TemporaryDirectory() as directory:
+    os.chdir(directory)
+    Path('request-body.txt').write_bytes(body.encode())
+    Path('document-cookie.txt').write_bytes(b'visible=current')
+    Path('application-headers.json').write_text(json.dumps({'Accept':'text/html','X-CSRF':'current','content-length':'10','Cookie':'stale','Host':'stale','Content-Type':'old','User-Agent':'old'}))
+    bindings=dict(target_session=session, source_url='https://shop.example.com/account', scripts=[{'url':'https://shop.example.com/protection.js','source':'// fixture'}], profile={'user_agent':'fixture-UA'})
+    exec(${JSON.stringify(code)}, bindings)
+    assert bindings['target_session'] is session
+    generated=json.loads(api_calls[0].data)
+    assert generated['mode']=='form'
+    assert generated['request']['body']==body
+    assert generated['document_cookie']=='visible=current'
+    assert 'session' not in generated['document_cookie']
+    assert api_calls[0].full_url=='https://api.rayonapi.com/v1/shape'
+    assert api_calls[0].get_header('Authorization')=='Bearer offline-api-key'
+    args, options=session.calls[0]
+    assert args==('POST','https://shop.example.com/account')
+    assert options['data']==(telemetry+'&'+body).encode()
+    assert options['allow_redirects'] is False
+    assert options['headers']=={'Accept':'text/html','X-CSRF':'current','Content-Type':'application/x-www-form-urlencoded','User-Agent':'fixture-UA'}
+    assert session.cookies=={'session':'client-only'}
+`;
+  const result = spawnSync('python3', ['-c', checks], {encoding:'utf8'});
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('form schema constrains media type with one optional UTF-8 charset', () => {
+  const schema = JSON.parse(readFileSync(new URL('../public/schema/shape-v1.openapi.json', import.meta.url), 'utf8'));
+  const pattern = schema.components.schemas.ShapeRequest.allOf[0].then.properties.request.properties.content_type.pattern;
+  const mime = new RegExp(pattern);
+  for (const type of ['application/x-www-form-urlencoded', 'Application/X-WWW-Form-Urlencoded; charset="UTF-8"', 'application/x-www-form-urlencoded; charset=utf8']) assert(mime.test(type), type);
+  for (const type of ['application/json', 'application/x-www-form-urlencoded; charset=latin1', 'application/x-www-form-urlencoded; charset=utf8; x=y']) assert(!mime.test(type), type);
+});
