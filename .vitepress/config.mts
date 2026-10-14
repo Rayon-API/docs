@@ -1,13 +1,23 @@
 import { defineConfig } from 'vitepress'
+import { copyFile, mkdir } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 
 export default defineConfig({
   title: 'RayonAPI',
   description: 'Material-only Shape header generation API and SDK documentation.',
   base: process.env.DOCS_BASE_PATH || '/',
-  srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md', 'CHANGELOG.md'],
+  srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md', 'SECURITY.md', 'CHANGELOG.md'],
   cleanUrls: true,
   appearance: 'dark',
   head: [['link', { rel: 'icon', href: `${process.env.DOCS_BASE_PATH || '/'}favicon.svg`, type: 'image/svg+xml' }]],
+  async buildEnd(siteConfig) {
+    // Keep intentional legacy redirects usable on static hosts with trailing slashes.
+    for (const path of ['reference/auth', 'reference/solve']) {
+      const alias = join(siteConfig.outDir, path, 'index.html')
+      await mkdir(dirname(alias), { recursive: true })
+      await copyFile(join(siteConfig.outDir, `${path}.html`), alias)
+    }
+  },
   themeConfig: {
     logo: '/favicon.svg',
     nav: [

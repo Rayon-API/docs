@@ -2,6 +2,8 @@
 
 ## Documentation audit
 
+- Reconciled current contract and intentional legacy redirects without publishing a duplicate site.
+
 - Added concrete script-selection, download and profile-file steps.
 - Shortened every public guide and reference page.
 - Updated usage to weekly allowances and a prepaid USD wallet.

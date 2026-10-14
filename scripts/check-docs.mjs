@@ -58,7 +58,12 @@ for (const page of pages) {
   const content = prose.join('\n')
   for (const match of content.matchAll(/\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
     const href = match[1]
-    if (/^(https?:|mailto:)/.test(href)) continue
+    if (/^(https?:|mailto:)/.test(href)) {
+      const url = new URL(href)
+      if (!['https:', 'mailto:'].includes(url.protocol)) throw new Error(`${page}: insecure link ${href}`)
+      links++
+      continue
+    }
     const [file, fragment] = href.split('#')
     const target = file?.startsWith('/')
       ? resolve(root, 'public', decodeURIComponent(file.slice(1)))
@@ -84,4 +89,4 @@ try {
 } finally {
   await rm(directory, { recursive: true, force: true })
 }
-console.log(`Checked ${pages.length} pages, ${links} local links, ${blocks} code blocks, and Python/JavaScript/Go REST examples.`)
+console.log(`Checked ${pages.length} pages, ${links} links, ${blocks} code blocks, and Python/JavaScript/Go REST examples.`)
