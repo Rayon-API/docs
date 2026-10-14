@@ -25,7 +25,7 @@ Prepare `shape.json` with your actual downloaded scripts (or a valid `material_r
 }
 ```
 
-`request.body` is your application's exact encoded body **before telemetry insertion**. An empty string is valid; null is not. Preserve duplicate fields, empty values and field order. Replace only stale telemetry tokens from an earlier generation, using their observed exact names; retain application fields, CSRF and cookies. Do not submit a stale complete telemetry family as application input.
+`request.body` is your application's exact encoded body **before telemetry insertion**. An empty string is valid; null is not. A single UTF-8 charset parameter is allowed in the content type. Preserve duplicate fields, empty values and field order. Replace only stale telemetry tokens from an earlier generation, using their observed exact names; retain application fields, CSRF and cookies. Do not submit a stale complete telemetry family as application input.
 
 `form` is optional; its `id` and `name` identify the observed form when the material needs a selector. Each is a string of at most 256 characters without control characters. Do not send `form` in header mode.
 
@@ -36,11 +36,11 @@ curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
   --data-binary @shape.json
 ```
 
-The API envelope stays JSON; `request.content_type` describes the later target request. See [request fields and limits](./reference/shape.md).
+The API envelope stays JSON; `request.content_type` describes the later target request. Form input is limited to 256 KiB UTF-8, 1,024 decoded pairs and 256 UTF-8 bytes per field name. Malformed percent escapes, invalid UTF-8 and NUL are rejected. See [request fields and limits](./reference/shape.md).
 
 ## Compose the body once
 
-A form result contains `form_fields` (an ordered object of raw exact-case names and values in observed insertion order) and `form_body` (telemetry only, already URL-encoded once). It also contains `request_id`, `generation_ms`, `profile_used`, `material_ref` and `material_expires_at`. It has no `headers` field and returns no target cookies. The six suffixes are `a/b/c/d/f/z`; keep an empty `d` value.
+A form result contains `form_fields` (an ordered object of raw exact-case names and values in observed insertion order) and `form_body` (telemetry only, already URL-encoded once). It also contains `request_id`, `generation_ms`, `profile_used`, `material_ref` and `material_expires_at`. It has no `headers` field and returns no target cookies. The six suffixes are `a/b/c/d/f/z`; keep an empty `d` value. Each opaque value is at most 16 KiB UTF-8 without control characters; the encoded telemetry body is at most 256 KiB.
 
 Synthetic response excerpt (values are illustrative, not usable telemetry):
 

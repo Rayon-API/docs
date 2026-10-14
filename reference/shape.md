@@ -28,7 +28,7 @@ Generate one fresh Shape telemetry family from client-supplied JavaScript. Heade
 
 Approve source and endpoint domains for your account. URLs cannot contain credentials, fragments, whitespace or backslashes. Unknown fields, duplicate/prototype JSON keys, nonfinite values and binary bodies are rejected. No proxy/IP field is accepted.
 
-In form mode, the target request must be POST with `application/x-www-form-urlencoded`; `request.body` is the exact encoded application body before telemetry insertion (empty string allowed, null forbidden). Preserve ordered duplicates and empty values; remove only stale telemetry.
+In form mode, the target request must be POST with `application/x-www-form-urlencoded`; `request.body` is the exact encoded application body before telemetry insertion (empty string allowed, null forbidden). One UTF-8 charset parameter is allowed. Malformed percent escapes, invalid UTF-8 and NUL are rejected. Preserve ordered duplicates and empty values; remove only stale telemetry.
 
 ## Response fields
 
@@ -56,6 +56,8 @@ No target cookies are returned. [Apply names and values unchanged](../guide/appl
 | Script source total / individual | 3 MiB / 2 MiB UTF-8 |
 | Scripts | 16 |
 | Request body | 256 KiB UTF-8 |
+| Form application input | 1,024 decoded pairs; 256 UTF-8 bytes per field name |
+| Form output | 16 KiB UTF-8 per value; 256 KiB encoded telemetry body |
 | Effective profile | 64 KiB; canvas must also pass PNG validation |
 | JavaScript-visible cookie text | 16 KiB; no CR, LF or NUL |
 | Each URL | 8,192 characters |

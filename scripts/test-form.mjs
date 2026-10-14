@@ -38,3 +38,26 @@ test('synthetic response contains a complete ordered form family and exact seria
   assert.equal(response.form_body, new URLSearchParams(Object.entries(response.form_fields)).toString());
   assert(!('headers' in response));
 });
+
+test('public schema separates form output and applies conditional input types', () => {
+  const schema = JSON.parse(readFileSync(new URL('../public/schema/shape-v1.openapi.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(schema.paths).sort(), ['/v1/shape', '/v1/usage']);
+  const definitions = schema.components.schemas;
+  assert.equal(definitions.ShapeRequest.properties.mode.default, 'header');
+  assert.deepEqual(definitions.ShapeRequest.properties.mode.enum, ['header', 'form']);
+  const branch = definitions.ShapeRequest.allOf[0];
+  assert.deepEqual(branch.if.required, ['mode']);
+  assert.equal(branch.if.properties.mode.const, 'form');
+  assert.equal(branch.then.properties.request.properties.method.const, 'POST');
+  assert.equal(branch.then.properties.request.properties.body.type, 'string');
+  assert.deepEqual(branch.else.not.required, ['form']);
+  assert.deepEqual(definitions.ShapeResponse.oneOf.map(item => item.$ref), ['#/components/schemas/HeaderShapeResponse', '#/components/schemas/FormShapeResponse']);
+  assert(!('headers' in definitions.FormShapeResponse.properties));
+  assert(!('form_body' in definitions.HeaderShapeResponse.properties));
+  assert(definitions.FormShapeResponse.required.includes('form_body'));
+  assert(definitions.FormShapeResponse.required.includes('form_fields'));
+  assert.equal(definitions.FormShapeResponse.properties.form_fields.minProperties, 6);
+  assert.equal(definitions.FormShapeResponse.properties.form_fields.maxProperties, 6);
+  assert.match(definitions.FormShapeResponse.properties.form_body.description, /Telemetry only/);
+  assert.match(definitions.FormShapeResponse.properties.form_body.description, /no application fields/);
+});
