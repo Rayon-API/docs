@@ -40,7 +40,7 @@ Browser cookies are not automatically present in an HTTP client. Establish the c
 
 Supply the downloaded sources, profile, current JavaScript-visible cookies if needed, and all four request fields. Keep the original body string: whitespace, key order and Unicode bytes matter.
 
-Follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. Check target status and content for both protection challenges and application errors.
+For header mode, follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. For the beta form workflow, continue with [direct REST form integration](../form-payload-integration.md#use-direct-rest-now) in that same open session. Check target status and content for both protection challenges and application errors.
 
 ## Run the complete example
 
