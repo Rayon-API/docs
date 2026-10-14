@@ -38,7 +38,7 @@ const result = await client.generate(shape, { signal: controller.signal })
 
 [Apply `result.headers`](./applying-headers.md) unchanged. Structured errors expose sanitized codes and request IDs. The client reuses API connections, validates results and never downloads target material or retries generation automatically.
 
-Persistent clients remember unexpired references for identical ordered material. After `material_expired`, explicitly retry with retained source and fresh context. The one-shot `generate(shape, apiKey)` helper closes after one call.
+Persistent clients remember unexpired references for identical ordered material. After `material_expired`, use a fresh client with retained scripts and current context so a cached reference is not selected again. The one-shot `generate(shape, apiKey)` helper closes after one call.
 
 Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-js) for types and options.
 

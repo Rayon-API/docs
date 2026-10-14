@@ -73,4 +73,4 @@ This validates inputs offline. Add `--fetch-and-generate` to collect material an
 
 Optional inputs: `--cookies-file local/cookies.txt` imports a Netscape cookie jar with domain/path/HttpOnly scope; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Keep the document-cookie snapshot consistent with cookies updated during collection.
 
-This helper restricts the endpoint to the source page's HTTPS origin. The API also supports separately approved endpoint hosts; implement explicit origins and cookie scope for those integrations. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.
+The helper allows the source page's HTTPS origin by default. For another approved endpoint origin, add `--allow-request-origin https://api.shop.example.com` (repeat for each origin). Use an origin without path/query; the jar preserves cookie scope across hosts. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.

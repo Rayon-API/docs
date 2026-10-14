@@ -4,7 +4,7 @@
 | --- | --- |
 | `invalid_input` | Check required fields, exact types, profile aliases and [input limits](../reference/shape.md#input-limits). |
 | `unsupported_material` / incomplete family | Confirm full protection source, exact URLs, loader dependencies and execution order. Check for HTML challenge responses. |
-| `material_expired` | Upload retained source with current profile, request and cookies. References can disappear before their five-minute expiry. |
+| `material_expired` | Upload retained source with current context; use a fresh SDK client to bypass a stale cached reference. References may disappear before expiry. |
 | HTTP 401 / 403 | Check key, account/policy status and approval for both source and endpoint domains. |
 | HTTP 402 | Check [weekly allowance and wallet funds](../reference/usage.md). |
 | HTTP 429 | Inspect error code and `Retry-After`; account rate and generation capacity are separate limits. |

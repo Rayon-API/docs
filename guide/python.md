@@ -39,7 +39,7 @@ async def generate_headers(shape, api_key):
 
 [Apply `result.headers`](./applying-headers.md) unchanged. Structured exceptions expose sanitized error codes and request IDs. The SDK validates results, closes owned connections and never downloads target material or retries generation automatically.
 
-Persistent clients remember unexpired references for identical ordered material. After `material_expired`, explicitly retry with retained source and fresh context. The one-shot `generate(shape, api_key)` helper closes after one call.
+Persistent clients remember unexpired references for identical ordered material. After `material_expired`, use a fresh client with retained scripts and current context so a cached reference is not selected again. The one-shot `generate(shape, api_key)` helper closes after one call.
 
 Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for types and options.
 
