@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
 const root = resolve(import.meta.dirname, '..')
-const pages = ['index.md', 'README.md']
+const pages = (await readdir(root)).filter(name => name.endsWith('.md'))
 for (const folder of ['guide', 'reference']) {
   pages.push(...(await readdir(join(root, folder))).filter(name => name.endsWith('.md')).map(name => `${folder}/${name}`))
 }
@@ -60,7 +60,9 @@ for (const page of pages) {
     const href = match[1]
     if (/^(https?:|mailto:)/.test(href)) continue
     const [file, fragment] = href.split('#')
-    const target = file ? resolve(dirname(path), decodeURIComponent(file)) : path
+    const target = file?.startsWith('/')
+      ? resolve(root, 'public', decodeURIComponent(file.slice(1)))
+      : file ? resolve(dirname(path), decodeURIComponent(file)) : path
     await access(target).catch(() => { throw new Error(`${page}: missing link ${href}`) })
     if (fragment && extname(target) === '.md') {
       const targetText = await readFile(target, 'utf8')

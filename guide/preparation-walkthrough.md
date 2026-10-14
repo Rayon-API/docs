@@ -1,22 +1,24 @@
-# Prepare your first integration
+# Collect inputs for your first request
 
-Use an authorized browser session and its matching HTTP client. RayonAPI receives protection material; it does not discover scripts or open the site for you.
+Use your browser's actual traffic to identify the material. The API receives what you collect; it does not inspect the site.
 
-## 1. Select the protection scripts
+## 1. Find the protection scripts
 
-Open Chrome DevTools → Network, enable **Preserve log**, and perform your intended action. Select the application request that carries telemetry. Inspect its **Initiator** chain and the JavaScript requests responsible for that instrumentation. Keep the required loader, payload and dependencies in execution order.
+1. Open the source page in your browser. In DevTools → **Network**, enable **Preserve log**, clear the log and perform the intended action.
+2. Select the protected application request. Record its URL, method, content type, body and required application headers.
+3. Inspect **Initiator** and nearby JavaScript requests to identify the protection loader, payload and required dependencies. Dynamic payloads may appear only after the action.
+4. Copy each full script URL, including query parameters, and note execution order. Inspect the response source to confirm it is protection JavaScript.
 
-Record each complete script URL, including query parameters. Download the actual sources using that same authorized session. Check status, content type and body: HTML challenge pages are not script material. An initiator chain is a starting point, not proof that every script in it is required.
+`source_url` is the page where that code executes, such as `https://shop.example.com/account`; `request.url` is the endpoint you will call. Script URLs describe script location and execution context. None tells RayonAPI to download anything.
 
-Save `material.json` using the [material format](./material.md). Keep it outside Git and shared logs.
+An initiator chain is evidence to inspect, not a list to upload wholesale. Scanning static HTML or downloading every `<script>` cannot guarantee a complete bundle.
 
-## 2. Measure the browser profile
+## 2. Save the measured profile
 
-On that source page, paste the [profile collector](https://docs.rayonapi.com/examples/capture-profile.js) into DevTools. It reads browser identity, dimensions and available unmasked WebGL values, then copies JSON to your clipboard. Save the JSON as `profile.json`.
-
-The collector does not alter browser properties, fetch URLs or collect cookies. Unavailable WebGL values are omitted. It does not supply protection-specific canvas pixels; obtain those separately if your integration needs them. An HTTP client's TLS fingerprint must still match the browser profile.
-
-Validate the file locally:
+1. Open the [profile collector](/examples/capture-profile.js), select all its source and copy it.
+2. On the source page, open DevTools → **Sources → Snippets**, create a snippet, paste the code and run it with **Ctrl+Enter** (**Cmd+Enter** on macOS).
+3. The final `copy(...)` call places JSON on your clipboard. Paste it into a local UTF-8 file named `profile.json`, outside source control.
+4. Validate it before generation:
 
 ```python
 import json
@@ -26,12 +28,49 @@ from rayon_sdk_py import validate_profile
 profile = validate_profile(json.loads(Path("profile.json").read_text(encoding="utf-8")))
 ```
 
-## 3. Keep the request exact
+The collector reads browser identity, dimensions and available WebGL values. It omits unavailable GPU values, cookies and protection-specific canvas pixels. Capture required canvas pixels separately. Match your target client's TLS impersonation and headers to this browser; the profile alone does not configure them.
 
-Record the final endpoint URL, method, content type and exact UTF-8 body string. Preserve its application headers and scoped cookie jar in your target client. If the scripts need `document.cookie`, supply only current JavaScript-visible values from the source page; exclude HttpOnly cookies.
+## 3. Fetch the selected URLs in your client
 
-Use these inputs in the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) to the same request. Both source and endpoint domains need approved API access. Separate API subdomains are supported when explicitly approved; avoid wildcard forwarding.
+Use the [material download example](./material.md) with your chosen URLs and one `curl_cffi.Session`. Fetch the source page, required loader and payload through the same sticky proxy used for the final request. Check every response before saving source.
 
-## 4. Check the target response
+Browser cookies are not automatically present in an HTTP client. Establish the client session's required application state; browser capture identifies the flow, while the client must collect material for its own current session.
 
-HTTP 200 from RayonAPI means generation succeeded. Check the target's own response for challenges, application errors and authentication failures. Keep request IDs for support; share redacted diagnostics rather than scripts, cookies, generated headers or credentials.
+## 4. Generate for the exact request
+
+Supply the downloaded sources, profile, current JavaScript-visible cookies if needed, and all four request fields. Keep the original body string: whitespace, key order and Unicode bytes matter.
+
+Follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. Check target status and content for both protection challenges and application errors.
+
+## Run the complete example
+
+The [examples repository](https://github.com/Rayon-API/rayon-examples) provides a runnable workflow. It fetches explicitly supplied script URLs; it does not discover them.
+
+```sh
+git clone https://github.com/Rayon-API/rayon-examples.git
+cd rayon-examples
+python -m pip install -r requirements.txt
+mkdir -p local
+```
+
+Save `local/profile.json`, your exact UTF-8 `local/request-body.txt`, and `local/document-cookie.txt` (current JavaScript-visible cookie string with no trailing newline; an empty file is allowed). For a matching browser-state import, run `copy(document.cookie)` in the source page Console and save the clipboard without an added newline; do not use a snapshot from an unrelated session. Set URL variables from your integration and `CHROME_PROFILE` to the matching transport profile.
+
+```sh
+python -m examples.request_workflow \
+  --source-url "$SOURCE_URL" \
+  --request-url "$REQUEST_URL" \
+  --method POST \
+  --content-type application/json \
+  --body-file local/request-body.txt \
+  --profile local/profile.json \
+  --document-cookie-file local/document-cookie.txt \
+  --script-url "$LOADER_URL" \
+  --script-url "$PAYLOAD_URL" \
+  --impersonate "$CHROME_PROFILE"
+```
+
+This validates inputs offline. Add `--fetch-and-generate` to collect material and call RayonAPI, or `--send` for collection → generation → target request in one live session. Set `RAYON_API_KEY` for either network mode. The generation-only mode does not preserve a session for a later send.
+
+Optional inputs: `--cookies-file local/cookies.txt` imports a Netscape cookie jar with domain/path/HttpOnly scope; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Keep the document-cookie snapshot consistent with cookies updated during collection.
+
+This helper restricts the endpoint to the source page's HTTPS origin. The API also supports separately approved endpoint hosts; implement explicit origins and cookie scope for those integrations. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.

@@ -1,41 +1,45 @@
 # JavaScript / TypeScript SDK
 
-Use the SDK server-side; API keys must not be shipped to browsers.
+Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are included. Keep the SDK and API key server-side.
 
-Requires Node.js 20.18.1 or later. ESM, CommonJS and TypeScript declarations are included.
+## 1. Install
 
 ```sh
 npm install rayon-sdk-js@^1
 ```
 
+## 2. Generate with a persistent client
+
+Prepare `shape.json` using the [collection guide](./preparation-walkthrough.md) and [request contract](../reference/shape.md).
+
 ```javascript
 import { readFile } from 'node:fs/promises'
 import { RayonClient } from 'rayon-sdk-js'
 
-const shape = JSON.parse(await readFile('shape-request.json', 'utf8'))
+const shape = JSON.parse(await readFile('shape.json', 'utf8'))
 const client = new RayonClient(process.env.RAYON_API_KEY, { timeoutMs: 45000 })
 try {
   const result = await client.generate(shape)
   const usage = await client.usage()
-  // Apply result.headers using your separate target session.
+  // Apply result.headers in your existing target session.
 } finally {
   await client.close()
 }
 ```
 
-Pass an `AbortSignal` to cancel a request:
+To cancel, pass an `AbortSignal`:
 
 ```javascript
 const controller = new AbortController()
 const result = await client.generate(shape, { signal: controller.signal })
 ```
 
-The typed contract matches the [REST reference](../reference/shape.md). The client reuses API connections and provides structured errors; it does not download protection scripts or retry generation automatically.
+## 3. Handle results and errors
 
-Cancellation or a transport timeout does not prove the server never admitted the job. Check your usage before deciding whether to make another generation attempt.
+[Apply `result.headers`](./applying-headers.md) unchanged. Structured errors expose sanitized codes and request IDs. The client reuses API connections, validates results and never downloads target material or retries generation automatically.
 
-## Material reuse and profiles
+Persistent clients remember unexpired references for identical ordered material. After `material_expired`, explicitly retry with retained source and fresh context. The one-shot `generate(shape, apiKey)` helper closes after one call.
 
-The persistent client remembers unexpired material references when you repeat the same ordered scripts. Each generation still uses fresh request, profile and cookie inputs. Keep your source files: eviction or a server restart can invalidate a reference before its five-minute expiry. A failed POST is not automatically retried.
+Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-js) for types and options.
 
-Use `validate_profile(profile)` for offline validation. The one-shot `generate(shape, apiKey)` helper closes its connection after the call; reuse `RayonClient` for repeated requests. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-js) for options and error types.
+`generation_ms` measures server generation. Time the complete API call for upload/network latency. Cancellation or timeout can occur after billing settlement; check usage/history before retrying.

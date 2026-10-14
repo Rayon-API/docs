@@ -1,17 +1,13 @@
 # Shape / F5
 
-Shape protects selected application requests with customer-specific telemetry headers. The prefix varies by site; use the names returned by RayonAPI without renaming them.
+RayonAPI supports web Shape header generation. Customer-specific prefixes vary; keep returned names and values unchanged.
 
-The material-only flow is:
+1. [Collect](./preparation-walkthrough.md) the loader, payload and required dependencies in execution order.
+2. Call `POST /v1/shape` with full source, a measured profile and the exact application request.
+3. [Apply](./applying-headers.md) the fresh headers using the same target session.
 
-1. Download the required protection scripts using your target session.
-2. Supply their ordered source, supported profile and exact application request to `/v1/shape`.
-3. Add the returned six-header family to that request and send it using the same target session.
+The complete family has six suffixes: `a`, `b`, `c`, `d`, `f`, `z`. The `d` value may be empty.
 
-The six suffixes are `a`, `b`, `c`, `d`, `f` and `z`. The `d` value may be empty. A complete generated family does not establish that the site accepted the request.
+Loader-dependent payloads need both scripts and their exact URLs. Unsupported network dependencies are not downloaded by the API. Material references reuse source only; generate fresh headers for each request.
 
-Loader-dependent payloads need their loader and exact script URLs. Scripts that require unsupported network dependencies cannot be repaired by the API downloading extra resources.
-
-Do not reuse telemetry from a different request, session or browser profile. Material references reuse script source only; every API call generates fresh headers for the current request.
-
-Start with [material preparation](./material.md), then [apply the headers](./applying-headers.md). Diagnose application errors separately from [generation errors](../reference/errors.md).
+A successful generation does not guarantee target acceptance. Check the target's content and distinguish challenges from application errors using [troubleshooting](./troubleshooting.md).

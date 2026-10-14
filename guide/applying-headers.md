@@ -1,6 +1,10 @@
 # Apply generated headers
 
-Use the target session that downloaded the protection material. It already owns the cookies and proxy configuration for that workflow.
+## 1. Keep the collecting session open
+
+Use the target session that downloaded material, with its scoped cookie jar, sticky proxy and matching browser transport. Prepare `application_headers` with the target's required authentication, CSRF, Origin and Referer fields; exclude stale telemetry.
+
+## 2. Send the exact request
 
 ```python
 from urllib.parse import urlsplit
@@ -42,12 +46,10 @@ response = target_session.request(
 )
 ```
 
-Source and endpoint domains can differ when both have approved access. Use an explicit HTTPS origin allowlist, not a wildcard suffix check. Keep cookies in the scoped cookie jar; a cookie for the source host must not be manually forwarded to a different API host. Disable redirects so credentials cannot follow a request to an unapproved destination.
+Configure explicit allowed origins for your approved source and endpoint hosts, including API subdomains. Keep cookies in the jar so domain/path/security scope is preserved. Disable redirects and inspect them before forwarding credentials.
 
-`application_headers` includes the target's required Origin, Referer, CSRF or application authentication fields. Keep these separate from the RayonAPI key. Never forward `Authorization: Bearer <RayonAPI key>` to the target.
+Send the body as the same UTF-8 bytes used for generation. Do not reserialize JSON or rename returned headers. Never forward the RayonAPI Bearer key to the target.
 
-Do not reserialize JSON after generation: the exact body string, URL and method used for generation must match the outgoing request. Apply the returned names unchanged; different customers use different header prefixes. Remove stale telemetry from a previous request before adding the fresh generated family.
+## 3. Inspect target content
 
-The target HTTP client needs browser-grade TLS and consistent browser header behavior. The API SDK's connection to RayonAPI does not configure this client. Cookies retain their domain/path/security scope; avoid manually copying an entire cookie jar into a Cookie header.
-
-Inspect the target's status and body. A 200 challenge page is still a blocked workflow. A 400 application error may mean invalid test data, but it does not by itself prove header acceptance. Generation and target acceptance are separate outcomes.
+Check status and body for challenges, authentication and application errors. A 200 challenge is blocked; a 400 business error alone does not prove telemetry acceptance. Use [troubleshooting](./troubleshooting.md) if generation succeeds but the target rejects the request.

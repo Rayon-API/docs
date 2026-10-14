@@ -1,28 +1,32 @@
 # Direct REST
 
-Send JSON to `https://api.rayonapi.com/v1/shape` with `Authorization: Bearer <key>`. The request contains your downloaded scripts, profile and exact application request.
+## 1. Prepare the request file
 
-Prepare `shape-request.json` using the [material guide](./material.md). Then:
+Collect material using the [walkthrough](./preparation-walkthrough.md). Save the [complete request](../reference/shape.md) as UTF-8 JSON in `shape.json`.
+
+## 2. Call RayonAPI
 
 ```sh
 curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
   -H "Authorization: Bearer $RAYON_API_KEY" \
   -H 'Content-Type: application/json' \
-  --data-binary @shape-request.json
+  --data-binary @shape.json
 ```
 
-Do not put API keys in URLs. Use uncompressed JSON first; gzip request bodies must also meet the decoded-size limit.
+Use uncompressed JSON first. Gzip requests must meet both compressed and decoded limits. Keep keys out of URLs and logs.
 
-## Python
+### Python
 
 <<< ../examples/rest.py
 
-## JavaScript
+### JavaScript
 
 <<< ../examples/rest.mjs{js}
 
-## Go
+### Go
 
 <<< ../examples/rest.go
 
-These examples call RayonAPI only. Your application separately downloads material and submits generated headers using its existing target session. See [applying results](./applying-headers.md).
+## 3. Send the target request
+
+[Apply the returned headers](./applying-headers.md) in the session that collected material. These examples call only RayonAPI; they do not collect scripts or send target requests.

@@ -1,14 +1,14 @@
-# Migrate from 0.1
+# Migrate to version 1
 
-Version 1 replaces the URL-only `/solve` flow with client-supplied material at `/v1/shape`. Old `/solve` requests return HTTP 410 `api_retired`; there is no automatic download fallback.
+Version 1 replaces the retired URL-only interface with client-supplied material. Old requests return HTTP 410 `api_retired`; there is no automatic-download fallback.
 
-1. Upgrade the SDK to version 1.
-2. Download protection scripts using your own target session and retain its cookies.
-3. Supply ordered scripts, supported profile and exact request context to `generate()`.
-4. Apply `result.headers` with your original cookie jar and target client.
+1. Upgrade the Python or JavaScript SDK to version 1.
+2. [Collect protection source](./preparation-walkthrough.md) in your target session and retain its cookies.
+3. Replace the old URL-based helper with `generate(shape)` using ordered scripts, a supported profile and exact request context.
+4. Apply `result.headers` using that same target session.
 
-The old `solve(target_url, api_key)` function and status/cookies/internal-method response fields are removed. A successful generation uses HTTP 200; unsuccessful generation uses structured non-2xx errors.
+The old status, cookies and internal-method response fields are removed. Use `request_id`, `generation_ms` and `profile_used`; HTTP 200 indicates generation success and non-2xx responses carry [structured errors](../reference/errors.md).
 
-Use `material_ref` for subsequent requests that reuse the same script bundle, and supply current request/profile/cookie inputs each time. Keep original material for cache expiry.
+Material references reuse source only. Keep source for expiry and provide current request/profile/cookie inputs each time. Historical 0.1 packages remain available but do not work with the current API.
 
-Historical 0.1 packages remain available but are incompatible with the retired URL-mode API. See [quickstart](./quickstart.md) and the [reference](../reference/shape.md).
+Continue with the [quickstart](./quickstart.md).

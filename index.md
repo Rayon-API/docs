@@ -3,18 +3,22 @@ layout: home
 hero:
   name: RayonAPI
   text: Shape header generation
-  tagline: Supply your protection scripts and request context. Receive the headers for your next request.
+  tagline: Collect protection scripts. Generate headers. Send your exact request.
   actions:
     - theme: brand
-      text: Quickstart
+      text: Get started
       link: /guide/quickstart
     - theme: alt
       text: API reference
       link: /reference/shape
 ---
 
-RayonAPI generates Shape / F5 telemetry headers from material you supply. Your application downloads the site's protection scripts, maintains its session and sends the resulting headers to the target.
+RayonAPI generates Shape / F5 telemetry headers from your downloaded JavaScript, browser profile and request context.
 
-The API does not visit websites, manage your target cookies or send application requests. Generation success means a complete header family was generated; target acceptance also depends on your session, transport and application inputs.
+1. Your client collects the protection scripts and keeps the target session.
+2. `POST /v1/shape` returns fresh headers for one exact request.
+3. Your client sends that request with the headers and its existing cookies.
 
-Python and JavaScript SDKs provide the same material-only interface. Begin with the [quickstart](./guide/quickstart.md) and [core requirements](./guide/requirements.md).
+The API never downloads target URLs. A generated header family does not guarantee target acceptance.
+
+Start with the [quickstart](./guide/quickstart.md), or [collect material](./guide/preparation-walkthrough.md) for your first integration.

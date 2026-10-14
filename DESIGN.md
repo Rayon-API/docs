@@ -1,5 +1,5 @@
 # Documentation design
 
-Use the approved VitePress default theme and its responsive navigation, search, typography, code blocks, and light/dark switch. The surface is a reading experience: overview → quickstart → requirements → integration guides → reference.
+Preserve VitePress's existing theme for local content review. The canonical styled site is maintained separately; do not replace its design with this build.
 
-Brand changes are limited to a cyan accent and a compact lettermark. Preserve a readable text column, native theme behavior, keyboard focus, and explicit labels. Do not add a marketing hero, invented benchmarks, illustrations, custom navigation, or decorative motion.
+Navigation follows setup → material collection → integration → API reference. Use short headings, numbered actions, field tables and copyable examples. Keep readable typography, native keyboard focus and search. No marketing claims or invented benchmarks.

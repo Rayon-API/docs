@@ -1,10 +1,10 @@
 # Quickstart
 
-## Get access
+## 1. Create an API key
 
-Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies, request approval for your source and API domains, and create a key. Store it server-side as `RAYON_API_KEY`.
+Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies, request approval for your source and endpoint domains, then create a key. Store it server-side as `RAYON_API_KEY`.
 
-## Install
+## 2. Install an SDK
 
 ```sh
 python -m pip install 'rayon-sdk-py>=1.0,<2'
@@ -14,27 +14,22 @@ python -m pip install 'rayon-sdk-py>=1.0,<2'
 npm install rayon-sdk-js@^1
 ```
 
-Version 1 uses client-supplied material. Follow the [migration guide](./migration.md) if your application uses version 0.1.
+## 3. Check access
 
-## Prepare the material
+This free call verifies your key and shows available allowance:
 
-Use your own target HTTP session to download the protection loader and payload. Keep their full source, exact URLs and execution order in a local JSON file:
-
-```json
-{
-  "source_url": "https://example.com/account",
-  "scripts": [
-    {"url": "https://example.com/loader.js", "source": "/* Full downloaded loader source */"},
-    {"url": "https://example.com/protection.js?seed=example", "source": "/* Full downloaded protection source */"}
-  ]
-}
+```sh
+curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
+  -H "Authorization: Bearer $RAYON_API_KEY"
 ```
 
-These comment-only script values illustrate the format; they cannot generate headers. Supply actual protection source and dependencies. See [material preparation](./material.md).
+## 4. Collect the inputs
 
-## Generate headers
+Follow [your first integration](./preparation-walkthrough.md) to find the protection scripts, download their full source and save a measured `profile.json`. The resulting `material.json` contains `source_url` and ordered `scripts`.
 
-Read the material and your supported profile from files owned by your application:
+Keep the target HTTP session open: its cookie jar, proxy and browser identity are needed when you send the application request.
+
+## 5. Generate and apply headers
 
 ```python
 import json
@@ -44,20 +39,25 @@ from rayon_sdk_py import Client
 
 material = json.loads(Path("material.json").read_text(encoding="utf-8"))
 profile = json.loads(Path("profile.json").read_text(encoding="utf-8"))
-body = json.dumps({"username": "example_user"}, separators=(",", ":"))
+body = '{"username":"example_user"}'
 shape = {
     **material,
     "profile": profile,
     "request": {
-        "url": "https://example.com/api/username",
+        "url": "https://shop.example.com/api/username",
         "method": "POST",
         "content_type": "application/json",
         "body": body,
     },
+    # Add current document_cookie if the protection scripts read it.
 }
+Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="utf-8")
 with Client(os.environ["RAYON_API_KEY"]) as client:
     result = client.generate(shape)
-# Apply result.headers to this exact request in your existing target session.
+# Continue with the target_session that collected this material.
+# Apply result.headers and send body.encode("utf-8") unchanged.
 ```
 
-Send the same body string to the target. Keep your target cookies and browser identity consistent; RayonAPI does not return replacement cookies. See [applying results](./applying-headers.md).
+Replace the example endpoint with your approved endpoint. [Apply the headers](./applying-headers.md) in the existing target session and inspect the target response.
+
+The SDK and API do not collect material or send the target request. Upgrading from the old URL-only interface? Read [migration](./migration.md).

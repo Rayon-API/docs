@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import httpx
 
-shape = json.loads(Path("shape-request.json").read_text())
+shape = json.loads(Path("shape.json").read_text())
 with httpx.Client(timeout=45, trust_env=False, follow_redirects=False) as client:
     response = client.post(
         "https://api.rayonapi.com/v1/shape",

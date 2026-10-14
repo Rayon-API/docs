@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-    body, err := os.ReadFile("shape-request.json")
-    if err != nil { panic("Read shape-request.json before calling the API") }
+    body, err := os.ReadFile("shape.json")
+    if err != nil { panic("Read shape.json before calling the API") }
     req, err := http.NewRequest("POST", "https://api.rayonapi.com/v1/shape", bytes.NewReader(body))
     if err != nil { panic("Unable to build API request") }
     req.Header.Set("Authorization", "Bearer " + os.Getenv("RAYON_API_KEY"))

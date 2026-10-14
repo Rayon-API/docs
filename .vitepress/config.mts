@@ -22,8 +22,8 @@ export default defineConfig({
         { text: 'Core requirements', link: '/guide/requirements' }
       ] },
       { text: 'Integrate', items: [
-        { text: 'Prepare material', link: '/guide/material' },
-        { text: 'First integration', link: '/guide/preparation-walkthrough' },
+        { text: 'Collect inputs', link: '/guide/preparation-walkthrough' },
+        { text: 'Download scripts', link: '/guide/material' },
         { text: 'Browser profiles', link: '/guide/profiles' },
         { text: 'Apply headers', link: '/guide/applying-headers' },
         { text: 'Python SDK', link: '/guide/python' },

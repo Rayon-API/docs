@@ -1,46 +1,87 @@
-# Prepare protection material
+# Download protection material
 
-Download material with your existing target session, through the same sticky proxy and browser-grade transport used for the application request. Preserve the resulting cookie jar.
+## 1. Choose the URLs
 
-Identify the protection loader and payload for the workflow you are integrating. Keep only their required dependencies, in execution order. Do not upload the whole site's application bundle or assume any script on the page is a protection script.
+Use [browser Network inspection](./preparation-walkthrough.md) to select the protection loader, payload and required dependencies in execution order. Preserve complete URLs, including seeds and query strings. Replace the reserved example URLs below with those you observed.
 
-For a first integration, follow the [preparation walkthrough](./preparation-walkthrough.md) to select scripts and measure your browser profile.
+## 2. Download through one target session
 
-Each script needs its exact URL and full decoded source text. Preserve query parameters, including seeds. A payload that depends on a loader needs both. The API rejects unsupported or incomplete bundles; it does not fetch missing dependencies.
+```sh
+python -m pip install curl_cffi
+```
 
-For example, your client can download explicitly selected script URLs:
+Set `TARGET_IMPERSONATE` to a browser profile supported by [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/api.html) that matches your measured browser. Set `TARGET_PROXY` to your sticky proxy URL.
 
 ```python
+import json
+import os
+from pathlib import Path
+from curl_cffi import requests
+
+profile = json.loads(Path("profile.json").read_text(encoding="utf-8"))
+source_url = "https://shop.example.com/account"
+protection_urls = [
+    "https://shop.example.com/assets/protection-loader.js",
+    "https://shop.example.com/assets/protection-payload.js?seed=observed",
+]
+target_session = requests.Session(
+    impersonate=os.environ["TARGET_IMPERSONATE"],
+    proxy=os.environ["TARGET_PROXY"],
+    trust_env=False,
+    headers={"User-Agent": profile["user_agent"]},
+)
+# Use this same session for required application login/state setup.
+page = target_session.get(source_url, allow_redirects=False, timeout=30)
+page.raise_for_status()
+if page.status_code != 200:
+    raise ValueError("Inspect the source-page redirect or response first")
+
 scripts = []
 for script_url in protection_urls:
     response = target_session.get(script_url, allow_redirects=False, timeout=30)
     response.raise_for_status()
-    scripts.append({"url": script_url, "source": response.text})
+    media_type = response.headers.get("Content-Type", "").split(";")[0].strip().lower()
+    source = response.content.decode(response.encoding or "utf-8", errors="strict")
+    if (response.status_code != 200 or not source.strip()
+            or "html" in media_type or source.lstrip().startswith("<")):
+        raise ValueError("Expected JavaScript; inspect redirect/challenge response")
+    if media_type not in {
+        "application/javascript", "text/javascript", "application/x-javascript",
+    }:
+        raise ValueError("Inspect unexpected script content type before proceeding")
+    scripts.append({"url": script_url, "source": source})
+
+material = {"source_url": source_url, "scripts": scripts}
+Path("material.json").write_text(json.dumps(material, ensure_ascii=False), encoding="utf-8")
+# Generate and apply headers before closing target_session.
 ```
 
-`protection_urls` is the ordered list discovered by your integration. `target_session` is your client-owned session. Check its responses for challenges rather than uploading a blocking page as JavaScript. Resolve relative URLs against the actual source page.
+A JavaScript MIME type and HTTP 200 are preliminary checks. Compare the source with the observed protection response; neither proves you collected the correct or complete bundle. Resolve relative URLs against the actual source page. Inspect redirects explicitly rather than following them with session credentials.
 
-## Cookies and profile
+Keep complete decoded source, without trimming, beautifying or replacing it with comments. If decoding fails or a site serves scripts with another content type, inspect its actual encoding/content before adapting the checks.
 
-Your cookie jar stays in your application. If protection code reads `document.cookie`, supply `document_cookie` with only the source document's JavaScript-visible cookie values. Do not include HttpOnly cookies or treat this string as a replacement cookie jar.
+## 3. Keep cookies and context current
 
-Send a [supported browser profile](./profiles.md). Material, cookies, profile and the final target request must belong to a consistent session. Site-specific application headers and authentication remain your responsibility.
+The session owns your cookie jar. `material.json` does not save cookies, proxy settings or login state; do not restart with a fresh session and assume the file restores them.
 
-## Reuse material
+If the protection reads `document.cookie`, supply `document_cookie` containing current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. An empty string is the default. Do not flatten the full jar into this field.
 
-A successful generation returns `material_ref` and `material_expires_at`. For subsequent requests, supply the reference instead of `scripts`:
+Use the measured [profile](./profiles.md) and exact [request fields](../reference/shape.md). RayonAPI never fetches missing scripts or network dependencies.
+
+## 4. Reuse source with a material reference
+
+A successful result provides a key-scoped reference valid for the original source context:
 
 ```python
 next_shape = {
     "source_url": shape["source_url"],
     "material_ref": result.material_ref,
-    "profile": shape["profile"],
+    "profile": current_profile,
+    "document_cookie": current_document_cookie,
     "request": next_request,
 }
 ```
 
-References belong to the API key that created them, expire after five minutes, and may expire sooner through eviction or restart. Keep your original material so you can upload it again after `material_expired`. No server download occurs. Every generation requires current request/profile/cookie inputs and produces fresh headers.
+Supply exactly one of `scripts` and `material_ref`. References expire after five minutes and can disappear earlier after eviction/restart. Retain source to upload again after `material_expired`. Every generation still needs current request, profile and cookie inputs.
 
-## Limits
-
-The decoded JSON request is limited to 4 MiB; script source to 3 MiB total, 2 MiB per script and 16 scripts. Request body text is limited to 256 KiB. Smaller profile, cookie and output limits also apply; see the [reference](../reference/shape.md).
+Source limits: 16 scripts, 2 MiB each, 3 MiB total. See [all limits](../reference/shape.md#input-limits).

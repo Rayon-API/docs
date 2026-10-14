@@ -1,10 +1,14 @@
 # Changelog
 
+## Documentation audit
+
+- Added concrete script-selection, download and profile-file steps.
+- Shortened every public guide and reference page.
+- Updated usage to weekly allowances and a prepaid USD wallet.
+- Kept target examples on reserved domains and limited the public schema to current endpoints.
+
 ## 1.0.0
 
-- Material-only Shape generation at POST /v1/shape.
-- Client-owned protection scripts and target cookies.
-- Exact request context and customer-specific header names.
-- Key-scoped material references and structured errors.
-- Persistent Python/JavaScript clients and GET /v1/usage.
-- URL-only POST /solve retired with HTTP 410.
+- Client-supplied Shape source, exact request context and customer-specific headers.
+- Key-scoped material references, structured errors and persistent SDK clients.
+- Public `POST /v1/shape` and `GET /v1/usage`; URL-only interface retired.

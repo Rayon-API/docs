@@ -1,23 +1,18 @@
 # Troubleshooting
 
-## Generation rejected
+| Symptom | Next step |
+| --- | --- |
+| `invalid_input` | Check required fields, exact types, profile aliases and [input limits](../reference/shape.md#input-limits). |
+| `unsupported_material` / incomplete family | Confirm full protection source, exact URLs, loader dependencies and execution order. Check for HTML challenge responses. |
+| `material_expired` | Upload retained source with current profile, request and cookies. References can disappear before their five-minute expiry. |
+| HTTP 401 / 403 | Check key, account/policy status and approval for both source and endpoint domains. |
+| HTTP 402 | Check [weekly allowance and wallet funds](../reference/usage.md). |
+| HTTP 429 | Inspect error code and `Retry-After`; account rate and generation capacity are separate limits. |
+| Upload timeout | Keep within the 20-second upload deadline and size limits. |
+| Client timeout / cancellation | Check request history and usage before retrying; generation may already have succeeded and settled. |
+| Headers generated, target blocked | Compare exact body bytes, URL/method/content type, TLS/browser identity, proxy, scoped cookies and required application headers. |
+| Target returned 200 or an application error | Inspect content: a 200 can be a challenge, and a business error alone does not prove header acceptance. |
 
-Check the structured error code and `request_id`. `invalid_input` identifies an unsupported input shape; `unsupported_material` means the supplied script bundle could not generate the required family. Confirm loader dependencies, script order, full source and exact URLs.
+The SDK's default total timeout is 45 seconds in version 1.0.1+. It includes upload and network time. Generation POSTs are never retried automatically; each explicit retry is a new attempt.
 
-`material_expired` means the reference was evicted, expired or is unavailable to your key. Upload your retained script bundle again with current request and session inputs.
-
-## Capacity or rate limit
-
-For HTTP 429, inspect `error.code` and `Retry-After`. Available execution slots and account quotas are separate limits. The SDK does not automatically retry billable generation calls.
-
-## Timeout
-
-The default SDK timeout is 45 seconds (version 1.0.1 onward) for the whole API exchange. Server execution has a shorter bounded deadline. Upload time and network latency contribute to client-visible time. A client timeout can happen after successful generation and credit settlement. Inspect usage and request history before retrying.
-
-## Generated headers but target rejected
-
-Check the exact method, URL, content type and body; supported browser identity; target TLS/header behavior; cookie scope; proxy session; required application headers and credentials. Do not reuse stale telemetry.
-
-Inspect response content as well as status. A success status can contain a human-verification page. A business-validation error is different from a protection block, but status alone is insufficient to establish acceptance.
-
-When contacting support, provide the RayonAPI request ID and sanitized error code. Keep API keys, raw material, target cookies and private application bodies out of public reports.
+For support, share `request_id`, sanitized error code and redacted diagnostics. Keep keys, raw scripts, generated headers, cookies and private request bodies out of public reports. See [API errors](../reference/errors.md).

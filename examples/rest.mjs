@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-const body = await readFile('shape-request.json', 'utf8')
+const body = await readFile('shape.json', 'utf8')
 const response = await fetch('https://api.rayonapi.com/v1/shape', {
   method: 'POST',
   headers: { authorization: `Bearer ${process.env.RAYON_API_KEY}`, 'content-type': 'application/json' },

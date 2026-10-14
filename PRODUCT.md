@@ -1,27 +1,17 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
+## Audience and purpose
 
-## Platform
+Developers integrating Shape header generation with their own target HTTP session. Documentation should get them from a key to collected JavaScript, measured profile, exact request and applied headers.
 
-web
+## Contract
 
-## Stack
+Public endpoints are `POST /v1/shape` and `GET /v1/usage`. The client collects source, keeps cookies/proxy state and sends the target request. The API never downloads target URLs. Successful generation does not guarantee target acceptance.
 
-VitePress 1.6.4 default theme, Node 22, npm, GitHub Pages at `/docs/`.
+## Documentation stack
 
-## Users
+Markdown and VitePress 1.6.4 on Node 22. The VitePress build validates this content; the styled canonical site has a separate source and deployment.
 
-Developers integrating the public RayonAPI solve endpoint and SDKs into authorized target-site workflows.
+## Writing rules
 
-## Product Purpose
-
-Explain how to request telemetry capture, interpret the result, and handle downstream client and cookie requirements.
-
-## Capabilities and Constraints
-
-The public API accepts a target URL and an optional profile. It does not accept downstream request binding or proxy controls. Capture acceptance does not prove target enforcement or an endpoint success rate.
-
-## Brand Commitments
-
-RayonAPI, organization Rayon-API. Concise developer documentation, a minimal cyan accent, and the default VitePress theme with dark appearance.
+Use concise numbered procedures, field tables and reserved example domains. Keep limits, errors and session requirements explicit. Link related guidance instead of repeating it.

@@ -1,12 +1,16 @@
 # Python SDK
 
-Requires Python 3.10 or later. Sync and async clients share the same request contract.
+Requires Python 3.10+. Keep API keys server-side.
+
+## 1. Install
 
 ```sh
 python -m pip install 'rayon-sdk-py>=1.0,<2'
 ```
 
-Use a persistent client for multiple requests:
+## 2. Generate with a persistent client
+
+Prepare `shape.json` using the [collection guide](./preparation-walkthrough.md) and [request contract](../reference/shape.md).
 
 ```python
 import json
@@ -14,15 +18,14 @@ import os
 from pathlib import Path
 from rayon_sdk_py import Client
 
-shape = json.loads(Path("shape-request.json").read_text(encoding="utf-8"))
+shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
 with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
     result = client.generate(shape)
     usage = client.usage()
+# Apply result.headers in your existing target session.
 ```
 
-`shape-request.json` follows the [generation contract](../reference/shape.md). Read full protection source from your files rather than copying illustrative comments from the docs.
-
-For asynchronous applications:
+For async applications:
 
 ```python
 from rayon_sdk_py import AsyncClient
@@ -32,12 +35,12 @@ async def generate_headers(shape, api_key):
         return await client.generate(shape)
 ```
 
-The SDK exposes typed request/result models, validates response structure and raises structured errors for unsuccessful HTTP responses. It does not fetch target material or retry generation automatically. Close clients when finished to release connections.
+## 3. Handle results and errors
 
-`result.generation_ms` is server-side generation time. Measure elapsed time around `client.generate()` for the full latency your application sees, including upload and network time.
+[Apply `result.headers`](./applying-headers.md) unchanged. Structured exceptions expose sanitized error codes and request IDs. The SDK validates results, closes owned connections and never downloads target material or retries generation automatically.
 
-## Material reuse and profiles
+Persistent clients remember unexpired references for identical ordered material. After `material_expired`, explicitly retry with retained source and fresh context. The one-shot `generate(shape, api_key)` helper closes after one call.
 
-The persistent client remembers unexpired material references when you repeat the same ordered scripts. Each generation still uses fresh request, profile and cookie inputs. Keep your source files: eviction or a server restart can invalidate a reference before its five-minute expiry. A failed POST is not automatically retried.
+Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for types and options.
 
-Use `validate_profile(profile)` for offline validation. The one-shot `generate(shape, api_key)` helper closes its connection after the call; reuse `Client` or `AsyncClient` for repeated requests. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for options and error types.
+`result.generation_ms` measures server generation. Time the complete `client.generate()` call to measure upload, network and API latency. A client timeout can occur after billing settlement; check usage/history before retrying.
