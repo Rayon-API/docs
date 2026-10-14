@@ -85,8 +85,8 @@ test('material example uses one configured session, preserves source and rejects
 import json, os, sys, tempfile
 from pathlib import Path
 from types import SimpleNamespace
-os.environ["TARGET_IMPERSONATE"] = "fixture-browser"
-os.environ["TARGET_PROXY"] = "http://proxy.example.com:8080"
+os.environ["CHROME_PROFILE"] = "fixture-browser"
+os.environ["RAYON_TARGET_PROXY"] = "http://proxy.example.com:8080"
 source = "// fixture source\\nconst text = 'café';\\n"
 class Response:
     status_code = 200
@@ -107,7 +107,7 @@ class Session:
         if len(self.calls) == 1: return Response("<html>fixture page</html>", "text/html")
         if self.invalid: return Response(*self.invalid)
         return Response(source, "application/javascript; charset=utf-8")
-sys.modules["curl_cffi"] = SimpleNamespace(requests=SimpleNamespace(Session=Session))
+sys.modules["curl_cffi"] = SimpleNamespace(requests=SimpleNamespace(Session=Session), CurlOpt=SimpleNamespace(PROXY="proxy"))
 with tempfile.TemporaryDirectory() as directory:
     os.chdir(directory)
     Path("profile.json").write_text('{"user_agent":"fixture-UA"}', encoding="utf-8")
@@ -117,13 +117,19 @@ with tempfile.TemporaryDirectory() as directory:
     session = Session.created[0]
     assert bindings["target_session"] is session
     assert session.options == dict(impersonate="fixture-browser", proxy="http://proxy.example.com:8080",
-                                   trust_env=False, headers={"User-Agent":"fixture-UA"})
+                                   trust_env=False, curl_options={}, headers={"User-Agent":"fixture-UA"})
     assert [url for url, _ in session.calls] == [bindings["source_url"], *bindings["protection_urls"]]
     assert all(options["allow_redirects"] is False for _, options in session.calls)
     material = json.loads(Path("material.json").read_text(encoding="utf-8"))
     assert [script["source"] for script in material["scripts"]] == [source, source]
     assert [script["url"] for script in material["scripts"]] == bindings["protection_urls"]
     assert set(material) == {"source_url", "scripts"}
+    os.environ.pop("RAYON_TARGET_PROXY")
+    Path("profile.json").write_text('{"navigator":{"userAgent":"fixture-UA"}}', encoding="utf-8")
+    exec(${JSON.stringify(code)}, {})
+    assert Session.created[-1].options["proxy"] is None
+    assert Session.created[-1].options["curl_options"] == {"proxy": ""}
+    assert Session.created[-1].options["headers"] == {"User-Agent":"fixture-UA"}
     for invalid in [("<html>challenge</html>", "text/html"),
                     ("<html>challenge</html>", "application/javascript"),
                     (source, "application/json"), ("", "application/javascript")]:

@@ -20,6 +20,8 @@ curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
 | `allowance.wallet.balance_usd` | Available preloaded USD funds. |
 | `allowance.wallet.balance_micro_usd` | Exact balance in millionths of one USD. |
 | `allowance.payg_rate_per_1000_usd` | Current wallet price per 1,000 successful generations. |
+| `allowance.complimentary_remaining` | Unexpired trial/bonus calls, separate from paid calls and funds. |
+| `allowance.trial_ends_at` / `trial` | Current trial deadline/details when applicable; a trial may lower the effective rate limit. |
 
 Display wallet funds as authoritative. `prepaid_remaining` is a deprecated standard-rate call equivalent, not the USD balance. `legacy_prepaid_deprecated` identifies that compatibility view. Legacy `daily_used`/`monthly_used` are analytics only; no daily or monthly request cap is enforced.
 
@@ -32,7 +34,7 @@ Display wallet funds as authoritative. `prepaid_remaining` is a deprecated stand
 | Custom | Configured weekly limit, reset Monday 00:00 UTC; editing it preserves current usage. |
 | Wallet only | Preloaded USD funds have no expiry or weekly cap; standard PAYG rate applies. |
 
-An eligible paid period takes precedence over a custom allowance. Customers spend available weekly calls first, then wallet funds. Unpaid renewals grant no calls or discount; cancellation retains paid benefits until expiry.
+An eligible paid period takes precedence over a custom allowance. Available trial/bonus calls are spent first, then weekly calls, then wallet funds. Unpaid renewals grant no calls or discount; cancellation retains paid benefits until expiry.
 
 ## Weekly plans and PAYG
 

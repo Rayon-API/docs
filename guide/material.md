@@ -10,13 +10,13 @@ Use [browser Network inspection](./preparation-walkthrough.md) to select the pro
 python -m pip install curl_cffi
 ```
 
-Set `TARGET_IMPERSONATE` to a browser profile supported by [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/api.html) that matches your measured browser. Set `TARGET_PROXY` to your sticky proxy URL.
+Set `CHROME_PROFILE` to a browser profile supported by [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/api.html) that matches your measured browser. Set `RAYON_TARGET_PROXY` when you use a sticky proxy.
 
 ```python
 import json
 import os
 from pathlib import Path
-from curl_cffi import requests
+from curl_cffi import CurlOpt, requests
 
 profile = json.loads(Path("profile.json").read_text(encoding="utf-8"))
 source_url = "https://shop.example.com/account"
@@ -24,11 +24,14 @@ protection_urls = [
     "https://shop.example.com/assets/protection-loader.js",
     "https://shop.example.com/assets/protection-payload.js?seed=observed",
 ]
+proxy = os.environ.get("RAYON_TARGET_PROXY") or None
+user_agent = profile.get("user_agent") or profile["navigator"]["userAgent"]
 target_session = requests.Session(
-    impersonate=os.environ["TARGET_IMPERSONATE"],
-    proxy=os.environ["TARGET_PROXY"],
+    impersonate=os.environ["CHROME_PROFILE"],
+    proxy=proxy,
+    curl_options={} if proxy else {CurlOpt.PROXY: ""},
     trust_env=False,
-    headers={"User-Agent": profile["user_agent"]},
+    headers={"User-Agent": user_agent},
 )
 # Use this same session for required application login/state setup.
 page = target_session.get(source_url, allow_redirects=False, timeout=30)

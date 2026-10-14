@@ -49,6 +49,8 @@ The [examples repository](https://github.com/Rayon-API/rayon-examples) provides 
 ```sh
 git clone https://github.com/Rayon-API/rayon-examples.git
 cd rayon-examples
+python -m venv .venv
+source .venv/bin/activate
 python -m pip install -r requirements.txt
 mkdir -p local
 ```
@@ -71,6 +73,6 @@ python -m examples.request_workflow \
 
 This validates inputs offline. Add `--fetch-and-generate` to collect material and call RayonAPI, or `--send` for collection → generation → target request in one live session. Set `RAYON_API_KEY` for either network mode. The generation-only mode does not preserve a session for a later send.
 
-Optional inputs: `--cookies-file local/cookies.txt` imports a Netscape cookie jar with domain/path/HttpOnly scope; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Keep the document-cookie snapshot consistent with cookies updated during collection.
+Optional inputs: `--cookies-file local/cookies.txt` imports a scoped Netscape HTTP cookie jar; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Preserve export metadata where available; the transport does not retain every browser attribute. Keep the separate document-cookie snapshot consistent with cookies updated during collection.
 
 The helper allows the source page's HTTPS origin by default. For another approved endpoint origin, add `--allow-request-origin https://api.shop.example.com` (repeat for each origin). Use an origin without path/query; the jar preserves cookie scope across hosts. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.
