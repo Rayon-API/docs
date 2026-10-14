@@ -5,7 +5,7 @@ Requires Python 3.10+. Keep API keys server-side.
 ## 1. Install
 
 ```sh
-python -m pip install 'rayon-sdk-py>=1.0,<2'
+python -m pip install 'rayon-sdk-py>=1.1.0,<2'
 ```
 
 ## 2. Generate with a persistent client
@@ -45,4 +45,6 @@ Use `validate_profile(profile)` for offline validation. See the [SDK README](htt
 
 `result.generation_ms` measures server generation. Time the complete `client.generate()` call to measure upload, network and API latency. A client timeout can occur after billing settlement; check usage/history before retrying.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
+SDK 1.1.0+ supports six required headers with optional same-family `a0`. Upgrade older SDKs, which require exactly six headers. Forward the complete returned map unchanged, without appending captured `a0` or splitting `a`.
+
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.

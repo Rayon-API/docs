@@ -7,11 +7,11 @@ Open the [dashboard](https://dashboard.rayonapi.com), accept the current policie
 ## 2. Install an SDK
 
 ```sh
-python -m pip install 'rayon-sdk-py>=1.0,<2'
+python -m pip install 'rayon-sdk-py>=1.1.0,<2'
 ```
 
 ```sh
-npm install rayon-sdk-js@^1
+npm install rayon-sdk-js@^1.1.0
 ```
 
 ## 3. Check access
@@ -60,6 +60,6 @@ with Client(os.environ["RAYON_API_KEY"]) as client:
 
 Replace the example endpoint with your approved endpoint. [Apply the headers](./applying-headers.md) in the existing target session and inspect the target response.
 
-The SDK and API do not collect material or send the target request.
+The SDK and API do not collect material or send the target request. Header mode returns six required suffixes `a/b/c/d/f/z` and may include a same-family `a0` freshly emitted by the scripts. Forward the complete map unchanged; never append captured telemetry or split `a` yourself. SDK 1.1.0+ supports optional `a0`; upgrade older SDKs, which require exactly six headers.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.

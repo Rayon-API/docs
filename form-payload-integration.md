@@ -48,9 +48,11 @@ curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
 
 The API envelope stays JSON; `request.content_type` describes the later target request. Form input is limited to 256 KiB UTF-8, 1,024 decoded pairs and 256 UTF-8 bytes per field name. Malformed percent escapes, invalid UTF-8 and NUL are rejected. See [request fields and limits](./reference/shape.md).
 
+Before the synthetic submit, form mode allows eligible short initialization callbacks to settle, including chained zero-delay and animation-frame callbacks. This readiness phase stops when they settle and is bounded by 500 ms and the execution deadline; it does not wait for long-running background work. It is best effort, not full browser equivalence or a guarantee of target acceptance. A complete six-field family alone does not prove every browser signal was collected.
+
 ## Compose the body once
 
-A form result contains `form_fields` (an ordered object of raw exact-case names and values in observed insertion order) and `form_body` (telemetry only, already URL-encoded once). It also contains `request_id`, `generation_ms`, `profile_used`, `material_ref` and `material_expires_at`. It has no `headers` field and returns no target cookies. The six suffixes are `a/b/c/d/f/z`; keep an empty `d` value. Each opaque value is at most 16 KiB UTF-8 without control characters; the encoded telemetry body is at most 256 KiB.
+A form result contains `form_fields` (an ordered object of raw exact-case names and values in observed insertion order) and `form_body` (telemetry only, already URL-encoded once). It also contains `request_id`, `generation_ms`, `profile_used`, `material_ref` and `material_expires_at`. It has no `headers` field and returns no target cookies. The six suffixes are `a/b/c/d/f/z`; keep an empty `d` value. Forms remain unsplit and have no `a0`, even when `a` exceeds 7,900 characters. Each opaque value is at most 16 KiB UTF-8 without control characters; the encoded telemetry body is at most 256 KiB.
 
 Synthetic response excerpt (values are illustrative, not usable telemetry):
 
@@ -92,13 +94,13 @@ const wireBody = result.form_body + (applicationBody ? "&" + applicationBody : "
 // Send wireBody as the raw body through your existing target session.
 ```
 
-SDK 1.1.0 is not yet published; its planned typed `FormShapeResult` support will use this contract. REST works with the same JSON contract. Existing SDK/header integrations keep their current behavior. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
+SDK 1.1.0 is published for Python and JavaScript with typed `FormShapeResult` and optional header `a0` support. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
 
 Do not URL-encode `form_body` again or pass the combined body to a form serializer. A serializer may turn `%` into `%25`, collapse duplicate keys or change application encoding. If you need to rebuild a form, iterate `form_fields` with `.items()` or `Object.entries` in returned order, append the application's ordered pairs, and serialize that entire list **once**, without also adding `form_body`. Never merge pairs into a dictionary/object.
 
-## Use direct REST now
+## Use direct REST
 
-Form mode is live on `POST https://api.rayonapi.com/v1/shape`. SDK 1.1.0 is not yet published. The following Python example calls REST directly, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
+Form mode is live on `POST https://api.rayonapi.com/v1/shape` and supported by SDK 1.1.0+. The following Python example calls REST directly, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
 
 Save current source-page `document.cookie` in `document-cookie.txt` without a trailing newline. Save observed required target headers as `application-headers.json`; keep authentication/CSRF when required, and exclude the RayonAPI key. Replace the generic endpoint, origin allowlist and form selectors with the approved values you observed. Include clicked-submit data in `request-body.txt` and remove only stale telemetry before this call.
 
