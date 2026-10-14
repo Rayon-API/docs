@@ -60,6 +60,6 @@ with Client(os.environ["RAYON_API_KEY"]) as client:
 
 Replace the example endpoint with your approved endpoint. [Apply the headers](./applying-headers.md) in the existing target session and inspect the target response.
 
-The SDK and API do not collect material or send the target request.
+The SDK and API do not collect material or send the target request. Header mode returns six required suffixes `a/b/c/d/f/z` and may include a same-family `a0` freshly emitted by the scripts. Forward the complete map unchanged; never append captured telemetry or split `a` yourself. SDK 1.0.x requires exactly six headers. Optional `a0` support is prepared for 1.1.0, which is not yet published; use [direct REST](./rest.md) for a seven-header result until then.
 
 For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.

@@ -48,7 +48,7 @@ response = target_session.request(
 
 Configure explicit allowed origins for your approved source and endpoint hosts, including API subdomains. Keep cookies in the jar so domain/path/security scope is preserved. Disable redirects and inspect them before forwarding credentials.
 
-Send the body as the same UTF-8 bytes used for generation. Do not reserialize JSON or rename returned headers. Never forward the RayonAPI Bearer key to the target.
+Send the body as the same UTF-8 bytes used for generation. Forward the entire returned header map unchanged: six required suffixes `a/b/c/d/f/z` and optional same-family `a0` only when freshly emitted by the uploaded scripts. Do not append a captured `a0`, infer a split from the length of `a`, reserialize JSON or rename headers. Never forward the RayonAPI Bearer key to the target.
 
 ## 3. Inspect target content
 

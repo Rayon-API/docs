@@ -36,14 +36,14 @@ HTTP 200 returns:
 
 | Field | Meaning |
 | --- | --- |
-| `headers` | Header mode only. Complete common-prefix family with suffixes `a/b/c/d/f/z`; `d` may be empty. |
+| `headers` | Header mode only. Six required common-prefix suffixes `a/b/c/d/f/z` plus optional same-family `a0` freshly emitted by the uploaded scripts; `d` may be empty. Forward the entire map unchanged. |
 | `request_id` | Correlation ID, also in `X-Request-ID`. |
 | `generation_ms` | Server generation time; excludes upload/network overhead. |
 | `profile_used` | Sanitized effective profile, without canvas pixels or cookies. |
 | `material_ref` | Reuse the uploaded source bundle. |
 | `material_expires_at` | UTC expiry; eviction/restart may invalidate it earlier. |
 
-Form mode returns `form_fields` (raw names/values in observed order) and `form_body` (telemetry only, encoded once), with the same metadata above and without `headers`. Preserve exact case, names and empty values; do not infer a separator from header names. [Compose it with the application body once](../form-payload-integration.md#compose-the-body-once).
+Form mode returns exactly six unsplit `form_fields` with suffixes `a/b/c/d/f/z` (raw names/values in observed order; no `a0`, even when `a` exceeds 7,900 characters) and `form_body` (telemetry only, encoded once), with the same metadata above and without `headers`. Preserve exact case, names and empty values; do not infer a separator from header names. [Compose it with the application body once](../form-payload-integration.md#compose-the-body-once).
 
 No target cookies are returned. [Apply names and values unchanged](../guide/applying-headers.md). Generation success does not guarantee target acceptance.
 

@@ -44,4 +44,6 @@ Use `validate_profile(profile)` for offline validation. See the [SDK README](htt
 
 `generation_ms` measures server generation. Time the complete API call for upload/network latency. Cancellation or timeout can occur after billing settlement; check usage/history before retrying.
 
+SDK 1.0.x requires exactly six headers. Support for optional same-family `a0` is prepared for SDK 1.1.0, which is not yet published; use [direct REST](./rest.md) for seven-header results until then. Forward the complete returned map unchanged, without appending captured `a0` or splitting `a`.
+
 For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
