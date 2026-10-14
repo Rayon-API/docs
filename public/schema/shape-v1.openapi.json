@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rayon API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Unexpired complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
   },
   "servers": [
@@ -13,7 +13,7 @@
   "paths": {
     "/v1/shape": {
       "post": {
-        "summary": "Generate Shape headers from supplied material",
+        "summary": "Generate Shape telemetry from supplied material",
         "security": [
           {
             "ApiKey": []
@@ -181,7 +181,7 @@
             }
           },
           "200": {
-            "description": "Generated headers",
+            "description": "Generated telemetry for the requested header or form mode; target acceptance is not verified.",
             "headers": {
               "X-Request-ID": {
                 "schema": {
@@ -768,6 +768,19 @@
             "title": "Document Cookie",
             "type": "string",
             "description": "JavaScript-visible cookies only, at most 16 KiB; never retained in material cache."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "header",
+              "form"
+            ],
+            "default": "header",
+            "description": "Header mode (the default) returns HTTP telemetry headers. Form mode runs form instrumentation and returns body fields."
+          },
+          "form": {
+            "$ref": "#/components/schemas/FormContext",
+            "description": "Form mode only. Optional observed form ID and name; omitting this object creates the selected form without either attribute."
           }
         },
         "required": [
@@ -798,53 +811,59 @@
               ]
             }
           }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "mode": {
+                  "const": "form"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            },
+            "then": {
+              "properties": {
+                "request": {
+                  "properties": {
+                    "method": {
+                      "const": "POST"
+                    },
+                    "content_type": {
+                      "type": "string",
+                      "description": "application/x-www-form-urlencoded, optionally with one UTF-8 charset parameter.",
+                      "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[xX]-[wW][wW][wW]-[fF][oO][rR][mM]-[uU][rR][lL][eE][nN][cC][oO][dD][eE][dD](?:\\s*;\\s*[cC][hH][aA][rR][sS][eE][tT]\\s*=\\s*(?:\"[uU][tT][fF]-?8\"|[uU][tT][fF]-?8))?\\s*$"
+                    },
+                    "body": {
+                      "type": "string",
+                      "description": "Exact encoded application body before telemetry insertion; an empty string is permitted. At most 256 KiB UTF-8, 1,024 decoded pairs and 256 UTF-8 bytes per field name. Preserve duplicate fields, order and empty values. Malformed percent escapes, invalid UTF-8, NUL and a complete stale telemetry family are rejected."
+                    }
+                  }
+                }
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "form"
+                ]
+              }
+            }
+          }
         ]
       },
       "ShapeResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "headers",
-          "request_id",
-          "generation_ms",
-          "profile_used",
-          "material_ref",
-          "material_expires_at"
-        ],
-        "properties": {
-          "headers": {
-            "type": "object",
-            "minProperties": 6,
-            "maxProperties": 6,
-            "patternProperties": {
-              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-[abcdfz]$": {
-                "type": "string"
-              }
-            },
-            "additionalProperties": false,
-            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family. Header names use valid HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty. Generation does not assert target acceptance."
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/HeaderShapeResponse"
           },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "generation_ms": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "profile_used": {
-            "$ref": "#/components/schemas/BrowserProfile",
-            "description": "Effective supported browser identity; canvas pixels and document cookies are excluded."
-          },
-          "material_ref": {
-            "type": "string"
-          },
-          "material_expires_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Five-minute immutable material expiry, UTC. References are scoped to this API key."
+          {
+            "$ref": "#/components/schemas/FormShapeResponse"
           }
-        }
+        ],
+        "description": "Transport-specific output: header and form properties are mutually exclusive. Metadata meanings are unchanged. Generation does not establish target acceptance."
       },
       "UsageResponse": {
         "type": "object",
@@ -1098,6 +1117,122 @@
             }
           }
         }
+      },
+      "FormContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Optional observed form id; control characters are forbidden."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Optional observed form name; control characters are forbidden."
+          }
+        }
+      },
+      "HeaderShapeResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "headers",
+          "request_id",
+          "generation_ms",
+          "profile_used",
+          "material_ref",
+          "material_expires_at"
+        ],
+        "properties": {
+          "headers": {
+            "type": "object",
+            "minProperties": 6,
+            "maxProperties": 6,
+            "patternProperties": {
+              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-[abcdfz]$": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family. Header names use valid HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty. Generation does not assert target acceptance."
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "generation_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "profile_used": {
+            "$ref": "#/components/schemas/BrowserProfile",
+            "description": "Effective supported browser identity; canvas pixels and document cookies are excluded."
+          },
+          "material_ref": {
+            "type": "string"
+          },
+          "material_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Five-minute immutable material expiry, UTC. References are scoped to this API key."
+          }
+        },
+        "title": "HeaderShapeResponse"
+      },
+      "FormShapeResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "form_fields",
+          "form_body",
+          "request_id",
+          "generation_ms",
+          "profile_used",
+          "material_ref",
+          "material_expires_at"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "generation_ms": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "profile_used": {
+            "$ref": "#/components/schemas/BrowserProfile",
+            "description": "Effective supported browser identity; canvas pixels and document cookies are excluded."
+          },
+          "material_ref": {
+            "type": "string"
+          },
+          "material_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Five-minute immutable material expiry, UTC. References are scoped to this API key."
+          },
+          "form_fields": {
+            "type": "object",
+            "minProperties": 6,
+            "maxProperties": 6,
+            "additionalProperties": false,
+            "patternProperties": {
+              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}[abcdfz]$": {
+                "type": "string",
+                "maxLength": 16384
+              }
+            },
+            "description": "Six exact-case names sharing one common base and suffixes a/b/c/d/f/z, in captured insertion order. No separator is assumed. Values are opaque UTF-8 strings of at most 16 KiB each, without C0 control characters or DEL; d may be empty. One complete family is required."
+          },
+          "form_body": {
+            "type": "string",
+            "description": "Telemetry only, encoded once with native URLSearchParams in form_fields order. Contains no application fields. Preserve this raw string when prepending it to request.body. Must exactly serialize form_fields; at most 256 KiB UTF-8."
+          }
+        },
+        "title": "FormShapeResponse"
       }
     }
   }

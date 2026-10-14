@@ -88,3 +88,5 @@ next_shape = {
 Supply exactly one of `scripts` and `material_ref`. References expire after five minutes and can disappear earlier after eviction/restart. Retain source to upload again after `material_expired`. Every generation still needs current request, profile and cookie inputs.
 
 Source limits: 16 scripts, 2 MiB each, 3 MiB total. See [all limits](../reference/shape.md#input-limits).
+
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
