@@ -5,7 +5,7 @@ Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are include
 ## 1. Install
 
 ```sh
-npm install rayon-sdk-js@^1
+npm install rayon-sdk-js@^1.1.0
 ```
 
 ## 2. Generate with a persistent client
@@ -44,6 +44,6 @@ Use `validate_profile(profile)` for offline validation. See the [SDK README](htt
 
 `generation_ms` measures server generation. Time the complete API call for upload/network latency. Cancellation or timeout can occur after billing settlement; check usage/history before retrying.
 
-SDK 1.0.x requires exactly six headers. Support for optional same-family `a0` is prepared for SDK 1.1.0, which is not yet published; use [direct REST](./rest.md) for seven-header results until then. Forward the complete returned map unchanged, without appending captured `a0` or splitting `a`.
+SDK 1.1.0+ supports six required headers with optional same-family `a0`. Upgrade older SDKs, which require exactly six headers. Forward the complete returned map unchanged, without appending captured `a0` or splitting `a`.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.

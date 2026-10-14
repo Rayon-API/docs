@@ -40,7 +40,7 @@ Browser cookies are not automatically present in an HTTP client. Establish the c
 
 Supply the downloaded sources, profile, current JavaScript-visible cookies if needed, and all four request fields. Keep the original body string: whitespace, key order and Unicode bytes matter.
 
-For header mode, follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. For the beta form workflow, continue with [direct REST form integration](../form-payload-integration.md#use-direct-rest-now) in that same open session. Check target status and content for both protection challenges and application errors.
+For header mode, follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. For the beta form workflow, continue with [direct REST form integration](../form-payload-integration.md#use-direct-rest) in that same open session. Check target status and content for both protection challenges and application errors.
 
 ## Run the complete example
 
@@ -77,4 +77,4 @@ Optional inputs: `--cookies-file local/cookies.txt` imports a scoped Netscape HT
 
 The helper allows the source page's HTTPS origin by default. For another approved endpoint origin, add `--allow-request-origin https://api.shop.example.com` (repeat for each origin). Use an origin without path/query; the jar preserves cookie scope across hosts. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode requires SDK 1.1.0 when published, or direct REST.
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.
