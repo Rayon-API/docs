@@ -1,20 +1,24 @@
 ---
-title: Documentation moved
-sidebar: false
-outline: false
-head:
-  - - link
-    - rel: canonical
-      href: https://docs.rayonapi.com/
-  - - meta
-    - http-equiv: refresh
-      content: '0; url=https://docs.rayonapi.com/'
+layout: home
+hero:
+  name: RayonAPI
+  text: Shape header generation
+  tagline: Collect protection scripts. Generate headers. Send your exact request.
+  actions:
+    - theme: brand
+      text: Get started
+      link: /guide/quickstart
+    - theme: alt
+      text: API reference
+      link: /reference/shape
 ---
 
-# Documentation moved
+RayonAPI generates Shape / F5 telemetry headers from your downloaded JavaScript, browser profile and request context.
 
-This legacy page now lives in the canonical RayonAPI documentation.
+1. Your client collects the protection scripts and keeps the target session.
+2. `POST /v1/shape` returns fresh headers for one exact request.
+3. Your client sends that request with the headers and its existing cookies.
 
-[Continue to the current guide](https://docs.rayonapi.com/).
+The API never downloads target URLs. A generated header family does not guarantee target acceptance.
 
-[Documentation home](https://docs.rayonapi.com/) · [Support](mailto:support@rayonapi.com) · [Discord](https://discord.gg/TwhkJNyHWs)
+Start with the [quickstart](./guide/quickstart.md), or [collect material](./guide/preparation-walkthrough.md) for your first integration.

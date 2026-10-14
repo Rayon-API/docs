@@ -1,20 +1,32 @@
----
-title: Documentation moved
-sidebar: false
-outline: false
-head:
-  - - link
-    - rel: canonical
-      href: https://docs.rayonapi.com/api-reference
-  - - meta
-    - http-equiv: refresh
-      content: '0; url=https://docs.rayonapi.com/api-reference'
----
+# Direct REST
 
-# Documentation moved
+## 1. Prepare the request file
 
-This legacy page now lives in the canonical RayonAPI documentation.
+Collect material using the [walkthrough](./preparation-walkthrough.md). Save the [complete request](../reference/shape.md) as UTF-8 JSON in `shape.json`.
 
-[Continue to the current guide](https://docs.rayonapi.com/api-reference).
+## 2. Call RayonAPI
 
-[Documentation home](https://docs.rayonapi.com/) · [Support](mailto:support@rayonapi.com) · [Discord](https://discord.gg/TwhkJNyHWs)
+```sh
+curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
+  -H "Authorization: Bearer $RAYON_API_KEY" \
+  -H 'Content-Type: application/json' \
+  --data-binary @shape.json
+```
+
+Use uncompressed JSON first. Gzip requests must meet both compressed and decoded limits. Keep keys out of URLs and logs.
+
+### Python
+
+<<< ../examples/rest.py
+
+### JavaScript
+
+<<< ../examples/rest.mjs{js}
+
+### Go
+
+<<< ../examples/rest.go
+
+## 3. Send the target request
+
+[Apply the returned headers](./applying-headers.md) in the session that collected material. These examples call only RayonAPI; they do not collect scripts or send target requests.

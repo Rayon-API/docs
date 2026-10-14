@@ -5,24 +5,8 @@ import test from 'node:test'
 
 const root = resolve(import.meta.dirname, '..')
 const routes = {
-  'index': '',
-  'guide/quickstart': 'quickstart',
-  'guide/requirements': 'quickstart',
-  'guide/material': 'material',
-  'guide/preparation-walkthrough': 'material',
-  'guide/profiles': 'profiles-and-sessions',
-  'guide/applying-headers': 'profiles-and-sessions',
-  'guide/python': 'quickstart',
-  'guide/javascript': 'quickstart',
-  'guide/rest': 'api-reference',
-  'guide/shape-f5': 'api-reference',
-  'guide/troubleshooting': 'errors',
-  'guide/migration': 'migration',
-  'reference/shape': 'api-reference',
   'reference/solve': 'migration',
   'reference/auth': 'quickstart',
-  'reference/errors': 'errors',
-  'reference/usage': 'usage',
 }
 
 for (const [path, slug] of Object.entries(routes)) {

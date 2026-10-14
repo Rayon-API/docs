@@ -1,9 +1,10 @@
-import { readFile, readdir, access } from 'node:fs/promises'
+import { readFile, readdir, mkdtemp, rm, access } from 'node:fs/promises'
 import { dirname, extname, join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
 const root = resolve(import.meta.dirname, '..')
-const pages = ['index.md', 'README.md', 'SECURITY.md', 'CHANGELOG.md']
+const pages = (await readdir(root)).filter(name => name.endsWith('.md'))
 for (const folder of ['guide', 'reference']) {
   pages.push(...(await readdir(join(root, folder))).filter(name => name.endsWith('.md')).map(name => `${folder}/${name}`))
 }
@@ -64,7 +65,9 @@ for (const page of pages) {
       continue
     }
     const [file, fragment] = href.split('#')
-    const target = file ? resolve(dirname(path), decodeURIComponent(file)) : path
+    const target = file?.startsWith('/')
+      ? resolve(root, 'public', decodeURIComponent(file.slice(1)))
+      : file ? resolve(dirname(path), decodeURIComponent(file)) : path
     await access(target).catch(() => { throw new Error(`${page}: missing link ${href}`) })
     if (fragment && extname(target) === '.md') {
       const targetText = await readFile(target, 'utf8')
@@ -78,4 +81,12 @@ for (const page of pages) {
   }
 }
 
-console.log(`Checked ${pages.length} pages, ${links} links and ${blocks} code blocks.`)
+checkSyntax('python3', ['-c', 'import ast,sys; ast.parse(sys.stdin.read())'], await readFile(join(root, 'examples/rest.py'), 'utf8'), 'Python REST example')
+checkSyntax(process.execPath, ['--check', join(root, 'examples/rest.mjs')], undefined, 'JavaScript REST example')
+const directory = await mkdtemp(join(tmpdir(), 'rayon-docs-check-'))
+try {
+  checkSyntax('go', ['build', '-o', join(directory, 'rest'), join(root, 'examples/rest.go')], undefined, 'Go REST example')
+} finally {
+  await rm(directory, { recursive: true, force: true })
+}
+console.log(`Checked ${pages.length} pages, ${links} links, ${blocks} code blocks, and Python/JavaScript/Go REST examples.`)

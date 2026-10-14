@@ -336,31 +336,6 @@
           }
         }
       }
-    },
-    "/solve": {
-      "post": {
-        "summary": "Retired URL mode",
-        "responses": {
-          "410": {
-            "description": "api_retired; migrate to https://docs.rayonapi.com/migration",
-            "headers": {
-              "X-Request-ID": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
