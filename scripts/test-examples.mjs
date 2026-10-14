@@ -114,3 +114,13 @@ test('public schema contains only current generation and usage routes and the US
   assert.ok(allowance.required.includes('payg_rate_per_1000_usd'));
   assert.equal(allowance.properties.prepaid_remaining.deprecated, true);
 });
+
+test('REST examples render on GitHub with language fences and match their runnable sources', () => {
+  const markdown = readFileSync(`${root}guide/rest.md`, 'utf8');
+  assert.doesNotMatch(markdown, /^<<<\s/m);
+  for (const [language, file] of [['python', 'rest.py'], ['javascript', 'rest.mjs'], ['go', 'rest.go']]) {
+    const block = markdown.match(new RegExp('```' + language + '\\n([\\s\\S]*?)\\n```'));
+    assert.ok(block, `Missing ${language} syntax fence`);
+    assert.equal(block[1], readFileSync(`${root}examples/${file}`, 'utf8').trimEnd());
+  }
+});
