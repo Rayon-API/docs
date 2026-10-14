@@ -5,16 +5,16 @@ outline: false
 head:
   - - link
     - rel: canonical
-      href: https://docs.rayonapi.com/migration
+      href: https://docs.rayonapi.com/quickstart
   - - meta
     - http-equiv: refresh
-      content: '0; url=https://docs.rayonapi.com/migration'
+      content: '0; url=https://docs.rayonapi.com/quickstart'
 ---
 
 # Documentation moved
 
 This legacy page now lives in the canonical RayonAPI documentation.
 
-[Continue to the current guide](https://docs.rayonapi.com/migration).
+[Continue to the current guide](https://docs.rayonapi.com/quickstart).
 
 [Documentation home](https://docs.rayonapi.com/) · [Support](mailto:support@rayonapi.com) · [Discord](https://discord.gg/TwhkJNyHWs)

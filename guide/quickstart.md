@@ -60,4 +60,4 @@ with Client(os.environ["RAYON_API_KEY"]) as client:
 
 Replace the example endpoint with your approved endpoint. [Apply the headers](./applying-headers.md) in the existing target session and inspect the target response.
 
-The SDK and API do not collect material or send the target request. Upgrading from the old URL-only interface? Read [migration](./migration.md).
+The SDK and API do not collect material or send the target request.

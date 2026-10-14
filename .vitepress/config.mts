@@ -12,7 +12,7 @@ export default defineConfig({
   head: [['link', { rel: 'icon', href: `${process.env.DOCS_BASE_PATH || '/'}favicon.svg`, type: 'image/svg+xml' }]],
   async buildEnd(siteConfig) {
     // Keep intentional legacy redirects usable on static hosts with trailing slashes.
-    for (const path of ['reference/auth', 'reference/solve']) {
+    for (const path of ['reference/auth', 'reference/solve', 'guide/migration']) {
       const alias = join(siteConfig.outDir, path, 'index.html')
       await mkdir(dirname(alias), { recursive: true })
       await copyFile(join(siteConfig.outDir, `${path}.html`), alias)
@@ -45,8 +45,7 @@ export default defineConfig({
       { text: 'Reference', items: [
         { text: 'POST /v1/shape', link: '/reference/shape' },
         { text: 'Errors and limits', link: '/reference/errors' },
-        { text: 'GET /v1/usage', link: '/reference/usage' },
-        { text: 'Migration', link: '/guide/migration' }
+        { text: 'GET /v1/usage', link: '/reference/usage' }
       ] }
     ],
     search: { provider: 'local' },
