@@ -1,10 +1,9 @@
-import { readFile, readdir, mkdtemp, rm, access } from 'node:fs/promises'
+import { readFile, readdir, access } from 'node:fs/promises'
 import { dirname, extname, join, resolve } from 'node:path'
-import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 
 const root = resolve(import.meta.dirname, '..')
-const pages = ['index.md', 'README.md']
+const pages = ['index.md', 'README.md', 'SECURITY.md', 'CHANGELOG.md']
 for (const folder of ['guide', 'reference']) {
   pages.push(...(await readdir(join(root, folder))).filter(name => name.endsWith('.md')).map(name => `${folder}/${name}`))
 }
@@ -58,7 +57,12 @@ for (const page of pages) {
   const content = prose.join('\n')
   for (const match of content.matchAll(/\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
     const href = match[1]
-    if (/^(https?:|mailto:)/.test(href)) continue
+    if (/^(https?:|mailto:)/.test(href)) {
+      const url = new URL(href)
+      if (!['https:', 'mailto:'].includes(url.protocol)) throw new Error(`${page}: insecure link ${href}`)
+      links++
+      continue
+    }
     const [file, fragment] = href.split('#')
     const target = file ? resolve(dirname(path), decodeURIComponent(file)) : path
     await access(target).catch(() => { throw new Error(`${page}: missing link ${href}`) })
@@ -74,12 +78,4 @@ for (const page of pages) {
   }
 }
 
-checkSyntax('python3', ['-c', 'import ast,sys; ast.parse(sys.stdin.read())'], await readFile(join(root, 'examples/rest.py'), 'utf8'), 'Python REST example')
-checkSyntax(process.execPath, ['--check', join(root, 'examples/rest.mjs')], undefined, 'JavaScript REST example')
-const directory = await mkdtemp(join(tmpdir(), 'rayon-docs-check-'))
-try {
-  checkSyntax('go', ['build', '-o', join(directory, 'rest'), join(root, 'examples/rest.go')], undefined, 'Go REST example')
-} finally {
-  await rm(directory, { recursive: true, force: true })
-}
-console.log(`Checked ${pages.length} pages, ${links} local links, ${blocks} code blocks, and Python/JavaScript/Go REST examples.`)
+console.log(`Checked ${pages.length} pages, ${links} links and ${blocks} code blocks.`)

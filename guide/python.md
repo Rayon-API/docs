@@ -1,43 +1,20 @@
-# Python SDK
+---
+title: Documentation moved
+sidebar: false
+outline: false
+head:
+  - - link
+    - rel: canonical
+      href: https://docs.rayonapi.com/quickstart
+  - - meta
+    - http-equiv: refresh
+      content: '0; url=https://docs.rayonapi.com/quickstart'
+---
 
-Requires Python 3.10 or later. Sync and async clients share the same request contract.
+# Documentation moved
 
-```sh
-python -m pip install 'rayon-sdk-py>=1.0,<2'
-```
+This legacy page now lives in the canonical RayonAPI documentation.
 
-Use a persistent client for multiple requests:
+[Continue to the current guide](https://docs.rayonapi.com/quickstart).
 
-```python
-import json
-import os
-from pathlib import Path
-from rayon_sdk_py import Client
-
-shape = json.loads(Path("shape-request.json").read_text(encoding="utf-8"))
-with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
-    result = client.generate(shape)
-    usage = client.usage()
-```
-
-`shape-request.json` follows the [generation contract](../reference/shape.md). Read full protection source from your files rather than copying illustrative comments from the docs.
-
-For asynchronous applications:
-
-```python
-from rayon_sdk_py import AsyncClient
-
-async def generate_headers(shape, api_key):
-    async with AsyncClient(api_key, timeout=45) as client:
-        return await client.generate(shape)
-```
-
-The SDK exposes typed request/result models, validates response structure and raises structured errors for unsuccessful HTTP responses. It does not fetch target material or retry generation automatically. Close clients when finished to release connections.
-
-`result.generation_ms` is server-side generation time. Measure elapsed time around `client.generate()` for the full latency your application sees, including upload and network time.
-
-## Material reuse and profiles
-
-The persistent client remembers unexpired material references when you repeat the same ordered scripts. Each generation still uses fresh request, profile and cookie inputs. Keep your source files: eviction or a server restart can invalidate a reference before its five-minute expiry. A failed POST is not automatically retried.
-
-Use `validate_profile(profile)` for offline validation. The one-shot `generate(shape, api_key)` helper closes its connection after the call; reuse `Client` or `AsyncClient` for repeated requests. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for options and error types.
+[Documentation home](https://docs.rayonapi.com/) · [Support](mailto:support@rayonapi.com) · [Discord](https://discord.gg/TwhkJNyHWs)

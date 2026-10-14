@@ -1,28 +1,20 @@
-# Direct REST
+---
+title: Documentation moved
+sidebar: false
+outline: false
+head:
+  - - link
+    - rel: canonical
+      href: https://docs.rayonapi.com/api-reference
+  - - meta
+    - http-equiv: refresh
+      content: '0; url=https://docs.rayonapi.com/api-reference'
+---
 
-Send JSON to `https://api.rayonapi.com/v1/shape` with `Authorization: Bearer <key>`. The request contains your downloaded scripts, profile and exact application request.
+# Documentation moved
 
-Prepare `shape-request.json` using the [material guide](./material.md). Then:
+This legacy page now lives in the canonical RayonAPI documentation.
 
-```sh
-curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
-  -H "Authorization: Bearer $RAYON_API_KEY" \
-  -H 'Content-Type: application/json' \
-  --data-binary @shape-request.json
-```
+[Continue to the current guide](https://docs.rayonapi.com/api-reference).
 
-Do not put API keys in URLs. Use uncompressed JSON first; gzip request bodies must also meet the decoded-size limit.
-
-## Python
-
-<<< ../examples/rest.py
-
-## JavaScript
-
-<<< ../examples/rest.mjs{js}
-
-## Go
-
-<<< ../examples/rest.go
-
-These examples call RayonAPI only. Your application separately downloads material and submits generated headers using its existing target session. See [applying results](./applying-headers.md).
+[Documentation home](https://docs.rayonapi.com/) · [Support](mailto:support@rayonapi.com) · [Discord](https://discord.gg/TwhkJNyHWs)

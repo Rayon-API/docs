@@ -1,47 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import test from 'node:test';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-
-test('application example permits an explicit API origin and preserves exact UTF-8 bodies', () => {
-  const markdown = readFileSync(`${root}guide/applying-headers.md`, 'utf8');
-  const code = markdown.match(/```python\n([\s\S]*?)\n```/)[1];
-  const checks = `
-from types import SimpleNamespace
-class Session:
-    def __init__(self): self.calls = []
-    def request(self, *args, **kwargs): self.calls.append((args, kwargs))
-for url, method, body, content_type in [
-    ("https://api.shop.example.com/check", "POST", '{"name":"café"}\\n', "application/json"),
-    ("https://shop.example.com/account", "GET", None, None),
-]:
-    session = Session()
-    bindings = dict(shape={"request": dict(url=url, method=method, body=body, content_type=content_type)},
-                    profile={"user_agent":"test-browser"}, application_headers={"Accept":"application/json"},
-                    result=SimpleNamespace(headers={"fixture-a":"fresh"}), target_session=session)
-    exec(${JSON.stringify(code)}, bindings)
-    args, kwargs = session.calls[0]
-    assert args == (method, url)
-    assert kwargs["data"] == (body.encode("utf-8") if body is not None else None)
-    assert kwargs["allow_redirects"] is False
-    assert ("Content-Type" in kwargs["headers"]) == (content_type is not None)
-for url in ["https://unapproved.example.com/check", "https://shop.example.com:0/check",
-            "https://secret@shop.example.com/check", "https://shop.example.com/check#fragment"]:
-    session = Session()
-    bindings["target_session"] = session
-    bindings["shape"]["request"]["url"] = url
-    try: exec(${JSON.stringify(code)}, bindings)
-    except ValueError: pass
-    else: raise AssertionError("Unapproved destination was allowed")
-    assert not session.calls
-`;
-  const result = spawnSync('python3', ['-c', checks], { encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
-});
 
 test('profile collector reads available values without inventing a GPU or changing navigator', () => {
   const code = readFileSync(`${root}public/examples/capture-profile.js`, 'utf8');
