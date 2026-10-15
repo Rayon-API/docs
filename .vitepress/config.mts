@@ -11,8 +11,8 @@ export default defineConfig({
   appearance: 'dark',
   head: [['link', { rel: 'icon', href: `${process.env.DOCS_BASE_PATH || '/'}favicon.svg`, type: 'image/svg+xml' }]],
   async buildEnd(siteConfig) {
-    // Keep intentional legacy redirects usable on static hosts with trailing slashes.
-    for (const path of ['reference/auth', 'reference/solve', 'guide/migration']) {
+    // Keep the authentication guide redirect usable on static hosts with trailing slashes.
+    for (const path of ['reference/auth']) {
       const alias = join(siteConfig.outDir, path, 'index.html')
       await mkdir(dirname(alias), { recursive: true })
       await copyFile(join(siteConfig.outDir, `${path}.html`), alias)

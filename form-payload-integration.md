@@ -1,6 +1,6 @@
 # Form payload integration
 
-Form mode is a beta workflow for supported material. Use it when the observed protected request carries Shape telemetry in its URL-encoded body. Header mode remains the default. Both use public `POST /v1/shape`; the retired public `/solve` still returns HTTP 410. Private tooling is not a public integration endpoint.
+Form mode is a beta workflow for supported material. Use it when the observed protected request carries Shape telemetry in its URL-encoded body. Header mode remains the default. Both use `POST /v1/shape`.
 
 The documented six-field response applies to supported material. Sites may use other families; inspection alone does not establish compatibility. Unsupported or incomplete output returns an error. Generation success does not guarantee target acceptance.
 

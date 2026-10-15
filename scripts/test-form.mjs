@@ -5,7 +5,7 @@ import test from 'node:test';
 const guide = () => readFileSync(new URL('../form-payload-integration.md', import.meta.url), 'utf8');
 test('form guide documents the public transport and exact ordered composition', () => {
   const text = guide();
-  for (const term of ['POST /v1/shape', 'form_fields', 'form_body', 'application/x-www-form-urlencoded', 'Form Data', '1.1.0', 'CSRF', 'duplicate', 'separator', '410']) assert(text.includes(term), term);
+  for (const term of ['POST /v1/shape', 'form_fields', 'form_body', 'application/x-www-form-urlencoded', 'Form Data', '1.1.0', 'CSRF', 'duplicate', 'separator']) assert(text.includes(term), term);
   assert(!/mcdonald|starbucks|southwest|nordstrom|puma|homedepot/i.test(text));
   const config = readFileSync(new URL('../.vitepress/config.mts', import.meta.url), 'utf8');
   assert(config.includes("link: '/form-payload-integration'"));

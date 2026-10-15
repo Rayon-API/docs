@@ -13,7 +13,7 @@ head:
 
 # Documentation moved
 
-This legacy page now lives in the canonical RayonAPI documentation.
+Read authentication setup in the RayonAPI quickstart.
 
 [Continue to the current guide](https://docs.rayonapi.com/quickstart).
 
