@@ -5,8 +5,6 @@ import test from 'node:test'
 
 const root = resolve(import.meta.dirname, '..')
 const routes = {
-  'reference/solve': 'quickstart',
-  'guide/migration': 'quickstart',
   'reference/auth': 'quickstart',
 }
 

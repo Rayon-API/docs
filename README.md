@@ -2,7 +2,7 @@
 
 Public Markdown documentation, OpenAPI schema and illustrative examples for Shape generation.
 
-Canonical site: [docs.rayonapi.com](https://docs.rayonapi.com/). This repository's VitePress build checks content and intentional legacy redirects; CI does not publish it. The styled live site is maintained separately.
+Canonical site: [docs.rayonapi.com](https://docs.rayonapi.com/). This repository's VitePress build checks guides, links, examples and public API assets; CI does not publish it. The styled live site is maintained separately.
 
 ```sh
 npm ci

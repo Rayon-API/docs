@@ -13,7 +13,6 @@ Errors use a sanitized envelope and `X-Request-ID`:
 | 403 | Account, policy or domain access denied. |
 | 404 / 405 | Unknown route / unsupported method. |
 | 408 | `input_timeout`: upload exceeded 20 seconds; no allowance consumed. |
-| 410 | `api_retired`: use a current endpoint from the [Quickstart](../guide/quickstart.md). |
 | 413 | `input_too_large`: reduce input within [limits](./shape.md#input-limits). |
 | 415 | Unsupported content type/encoding. |
 | 422 | Invalid request/profile, unsupported material, expired reference or ambiguous header family. |
