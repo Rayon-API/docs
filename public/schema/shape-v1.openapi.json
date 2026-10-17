@@ -1113,6 +1113,10 @@
               "request_id": {
                 "type": "string",
                 "format": "uuid"
+              },
+              "retryable": {
+                "type": "boolean",
+                "description": "Optional guidance for a definite error. No automatic retries. Check history first after a timeout or uncertain settlement."
               }
             }
           }
