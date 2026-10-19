@@ -49,7 +49,7 @@
             }
           },
           "403": {
-            "description": "access_denied, policies_required or domain_not_approved",
+            "description": "access_denied with account, policy or domain reason; existing policies_required and domain_not_approved codes remain valid",
             "headers": {
               "X-Request-ID": {
                 "schema": {
@@ -62,6 +62,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "access_denied",
+                    "message": "Access to api.example.com has not been approved.",
+                    "request_id": "00000000-0000-4000-8000-000000000001",
+                    "retryable": false,
+                    "reason": "domain_not_approved",
+                    "action": "Request access to this domain in your dashboard.",
+                    "domain": "api.example.com",
+                    "field": "request.url",
+                    "billing_status": "not_charged"
+                  }
                 }
               }
             }
@@ -121,7 +134,7 @@
             }
           },
           "429": {
-            "description": "rate_limited, concurrency_exceeded or capacity_exceeded",
+            "description": "rate_limited: slow requests; concurrency_exceeded: reduce in-flight requests; capacity_exceeded: wait for service capacity. Respect Retry-After.",
             "headers": {
               "X-Request-ID": {
                 "schema": {
@@ -140,17 +153,34 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "concurrency_exceeded",
+                    "message": "Too many requests are running at once.",
+                    "request_id": "00000000-0000-4000-8000-000000000001",
+                    "retryable": true,
+                    "action": "Wait for running requests to finish, then retry.",
+                    "billing_status": "not_charged"
+                  }
                 }
               }
             }
           },
           "503": {
-            "description": "generation_unavailable",
+            "description": "credits_warming: temporary credit preparation, retryable true with Retry-After: 1; or generation_unavailable",
             "headers": {
               "X-Request-ID": {
                 "schema": {
                   "type": "string",
                   "format": "uuid"
+                }
+              },
+              "Retry-After": {
+                "description": "Delay in seconds; 1 for credits_warming.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
                 }
               }
             },
@@ -158,6 +188,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "credits_warming",
+                    "message": "Your credits are being prepared.",
+                    "request_id": "00000000-0000-4000-8000-000000000001",
+                    "retryable": true,
+                    "action": "Wait a moment, then retry. Contact support if this continues.",
+                    "billing_status": "not_charged"
+                  }
                 }
               }
             }
@@ -217,11 +257,21 @@
             }
           },
           "402": {
-            "description": "insufficient_credits: available generation allowance exhausted",
+            "description": "insufficient_credits: top up the wallet or wait for allowance renewal",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "insufficient_credits",
+                    "message": "No available allowance or sufficient wallet balance remains.",
+                    "request_id": "00000000-0000-4000-8000-000000000001",
+                    "retryable": false,
+                    "action": "Top up your wallet or add an active allowance in your dashboard.",
+                    "billing_status": "not_charged"
+                  }
                 }
               }
             }
@@ -1108,7 +1158,8 @@
                 "type": "string"
               },
               "message": {
-                "type": "string"
+                "type": "string",
+                "description": "Safe explanation without internal exception details."
               },
               "request_id": {
                 "type": "string",
@@ -1116,7 +1167,32 @@
               },
               "retryable": {
                 "type": "boolean",
-                "description": "Optional guidance for a definite error. No automatic retries. Check history first after a timeout or uncertain settlement."
+                "description": "Optional temporary-error guidance. No automatic retries. Check history after a timeout or pending/unknown billing outcome."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Specific cause, such as account_disabled, account_expired, policies_required, domain_not_approved or domain_pending. Existing error codes are preserved."
+              },
+              "action": {
+                "type": "string",
+                "description": "Safe next step for the caller."
+              },
+              "domain": {
+                "type": "string",
+                "description": "Rejected hostname. A root domain and its www alias share approval; other subdomains require explicit approval."
+              },
+              "field": {
+                "type": "string",
+                "description": "Request field involved, such as source_url or request.url."
+              },
+              "billing_status": {
+                "type": "string",
+                "enum": [
+                  "not_charged",
+                  "pending",
+                  "unknown"
+                ],
+                "description": "not_charged: no allowance or wallet funds were used. pending: the billing record is still updating. unknown or absent: billing could not be confirmed. Check history before resubmitting."
               }
             }
           }
