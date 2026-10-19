@@ -5,7 +5,7 @@ Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are include
 ## 1. Install
 
 ```sh
-npm install rayon-sdk-js@^1.1.0
+npm install rayon-sdk-js@^1.1.3
 ```
 
 ## 2. Generate with a persistent client
@@ -36,7 +36,21 @@ const result = await client.generate(shape, { signal: controller.signal })
 
 ## 3. Handle results and errors
 
-[Apply `result.headers`](./applying-headers.md) unchanged. Structured errors expose sanitized codes and request IDs. The client reuses API connections, validates results and never downloads target material or retries generation automatically.
+[Apply `result.headers`](./applying-headers.md) unchanged. Structured errors expose safe messages, codes and request IDs. SDK 1.1.3+ adds readable guidance from a trusted error catalog. Optional `reason`, `action`, `domain`, `field` and `billingStatus` explain the next step. The client reuses API connections, validates results and never downloads target material or retries generation automatically.
+
+```javascript
+import { RayonError } from 'rayon-sdk-js'
+
+try {
+  await client.generate(shape)
+} catch (error) {
+  if (!(error instanceof RayonError)) throw error
+  console.error(error.message, error.action, error.requestId)
+  // Check history before retrying if billingStatus is pending or unknown.
+}
+```
+
+`billingStatus: 'not_charged'` confirms no charge. An absent billing status is unknown. See [error and retry guidance](../reference/errors.md).
 
 Persistent clients remember unexpired references for identical ordered material. After `material_expired`, use a fresh client with retained scripts and current context so a cached reference is not selected again. The one-shot `generate(shape, apiKey)` helper closes after one call.
 
