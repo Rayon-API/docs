@@ -1179,7 +1179,7 @@
               },
               "domain": {
                 "type": "string",
-                "description": "Rejected hostname. Apex and www aliases share approval; other subdomains require explicit approval."
+                "description": "Rejected hostname. A root domain and its www alias share approval; other subdomains require explicit approval."
               },
               "field": {
                 "type": "string",
@@ -1192,7 +1192,7 @@
                   "pending",
                   "unknown"
                 ],
-                "description": "not_charged confirms rejection before admission or a settled release. pending is unsettled; unknown or absent does not confirm a charge outcome. Check history before resubmitting."
+                "description": "not_charged: no allowance or wallet funds were used. pending: the billing record is still updating. unknown or absent: billing could not be confirmed. Check history before resubmitting."
               }
             }
           }

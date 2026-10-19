@@ -11,11 +11,11 @@
 | HTTP 429 | `rate_limited`: slow requests; `concurrency_exceeded`: reduce in-flight requests; `capacity_exceeded`: wait. Respect `Retry-After`. |
 | HTTP 503 `credits_warming` | Credits are being prepared. Wait one second (`Retry-After: 1`) before retrying. |
 | Upload timeout | Keep within the 20-second upload deadline and size limits. |
-| Client timeout / cancellation, billing `pending` / `unknown` | Check request history before retrying; generation may already have settled. Contact support with the request ID if the outcome remains unclear. |
+| Client timeout / cancellation, billing `pending` / `unknown` | Check request history before retrying; generation may already have completed. Contact support with the request ID if the outcome remains unclear. |
 | Headers generated, target blocked | Compare exact body bytes, URL/method/content type, TLS/browser identity, proxy, scoped cookies and required application headers. |
 | Target returned 200 or an application error | Inspect content: a 200 can be a challenge, and a business error alone does not prove header acceptance. |
 
-Domain approval covers an apex domain and its `www` alias. Other subdomains need explicit approval. `domain_pending` means an approval request is known to be pending.
+Domain approval covers a root domain and its `www` alias. Other subdomains need explicit approval. `domain_pending` means an approval request is known to be pending.
 
 The SDK's default total timeout is 45 seconds in version 1.0.1+. It includes upload and network time. Generation POSTs are never retried automatically; each explicit retry is a new attempt.
 

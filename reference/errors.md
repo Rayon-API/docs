@@ -42,7 +42,7 @@ A 403 `access_denied` can include these reasons. Existing `policies_required` an
 | `domain_not_approved` | Request approval for the hostname in `domain`. |
 | `domain_pending` | Wait for the known pending approval. |
 
-Check both source and endpoint hosts. Approval covers an apex domain and its `www` alias; other subdomains need explicit approval. `domain_pending` is returned only when a pending request is known.
+Check both source and endpoint hosts. Approval covers a root domain and its `www` alias; other subdomains need explicit approval. `domain_pending` is returned only when a pending request is known.
 
 For support, share the request ID and safe code. Keep scripts, cookies, keys and private application bodies out of public reports. See [troubleshooting](../guide/troubleshooting.md).
 
@@ -50,10 +50,10 @@ For support, share the request ID and safe code. Keep scripts, cookies, keys and
 
 `error.retryable` is optional. `true` identifies a temporary error; `false` means correct the request or investigate first. An absent value is unknown. Respect `Retry-After`, add jitter and reduce concurrency. Neither SDK retries generation automatically; each explicit retry is a new request.
 
-After a client/network timeout or a response with `billing_status: pending` or `unknown`, check request history before resubmitting. Generation may already have settled. Contact support with the request ID if the outcome remains unclear.
+After a client/network timeout or a response with `billing_status: pending` or `unknown`, check request history before resubmitting. Generation may already have completed. Contact support with the request ID if the outcome remains unclear.
 
 ## Check the billing outcome
 
-`billing_status: not_charged` means rejection before admission or a confirmed release of the reserved allowance and wallet funds. `pending` means settlement is still in progress. `unknown` or an absent field does not confirm whether the request was charged.
+`billing_status: not_charged` means no allowance or wallet funds were used. `pending` means the billing record is still updating. `unknown` or an absent field means billing could not be confirmed. Failed generations are not billable; usage checks are free.
 
 In **Dashboard → Request history**, select a domain and open **Details**. The panel shows the request ID, recorded HTTP status, timing and a safe explanation/action. **Not charged** confirms no allowance or wallet funds were consumed. **Processing billing** refreshes while the final record updates. For **Billing status unavailable**, refresh or contact support with the ID. Successful usage is identified as allowance or wallet usage. A generated header set does not prove acceptance by the target.
