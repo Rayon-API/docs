@@ -85,7 +85,7 @@ next_shape = {
 }
 ```
 
-Supply exactly one of `scripts` and `material_ref`. References expire after five minutes and can disappear earlier after eviction/restart. Retain source to upload again after `material_expired`. Every generation still needs current request, profile and cookie inputs.
+Supply exactly one of `scripts` and `material_ref`. References have a lifetime of up to five minutes and can disappear earlier after a restart or on another instance. Use the returned `material_expires_at`; uploading identical material can reuse an existing reference without extending its expiry. Retain source to upload again after `material_expired`. SDK 1.1.4+ coalesces uploads and refreshes on the next real request near expiry. It recovers once from a confirmed unbilled cache miss only while the same client retains the original scripts. No target scripts are fetched and no background generation is performed. Every generation still needs current request, profile and cookie inputs.
 
 Source limits: 16 scripts, 2 MiB each, 3 MiB total. See [all limits](../reference/shape.md#input-limits).
 

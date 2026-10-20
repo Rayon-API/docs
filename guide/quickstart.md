@@ -4,14 +4,16 @@
 
 Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies, request approval for your source and endpoint domains, then create a key. Store it server-side as `RAYON_API_KEY`.
 
+After creating your key, join the [RayonAPI Discord server](https://discord.gg/TwhkJNyHWs) and claim the 1,000-request trial in the dashboard. It is available once per Discord identity and expires after seven days. A verified paid purchase removes the trial-only rate cap even if complimentary requests remain.
+
 ## 2. Install an SDK
 
 ```sh
-python -m pip install 'rayon-sdk-py>=1.1.0,<2'
+python -m pip install 'rayon-sdk-py>=1.1.4,<2'
 ```
 
 ```sh
-npm install rayon-sdk-js@^1.1.0
+npm install rayon-sdk-js@^1.1.4
 ```
 
 ## 3. Check access

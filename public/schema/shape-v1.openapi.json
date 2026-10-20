@@ -3,7 +3,7 @@
   "info": {
     "title": "Rayon API",
     "version": "1.1.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Unexpired complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share a process ingress cap equal to configured execution capacity; excess requests are rejected before body reads. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Unexpired complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
   },
   "servers": [
     {
@@ -949,9 +949,9 @@
             "properties": {
               "requests_per_second": {
                 "type": "number",
-                "maximum": 15,
+                "maximum": 10000,
                 "exclusiveMinimum": 0,
-                "description": "Effective account-wide rate, including an active trial cap. Trial expiry/exhaustion restores base limits."
+                "description": "Effective account-wide RPS across all keys: trial ceiling 15, general default 500, enterprise default 1000 with administrator overrides up to 10000. Lower account limits and service capacity still apply. Verified paid purchases remove trial-only caps while complimentary calls remain."
               }
             }
           },
@@ -1167,7 +1167,7 @@
               },
               "retryable": {
                 "type": "boolean",
-                "description": "Optional temporary-error guidance. No automatic retries. Check history after a timeout or pending/unknown billing outcome."
+                "description": "Optional temporary-error guidance; this flag alone does not cause automatic retries. SDK 1.1.4+ retries once only after HTTP 422 material_expired with billing_status not_charged and retained original scripts. Check history after a timeout or pending/unknown billing outcome."
               },
               "reason": {
                 "type": "string",

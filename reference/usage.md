@@ -12,7 +12,7 @@ curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
 | Field | Meaning |
 | --- | --- |
 | `request_id` | Correlation ID. |
-| `limits.requests_per_second` | Account generation rate limit, shared across keys; ceiling 15 requests/second. |
+| `limits.requests_per_second` | Account generation rate limit, shared across keys; trials have a 15 RPS ceiling, general accounts default to 500 RPS, and enterprise accounts default to 1,000 RPS with administrator-set overrides up to 10,000 RPS. Lower account limits and server capacity still apply. |
 | `allowance.kind` | `subscription`, `owner`, `custom` or `wallet`; legacy `prepaid` may remain. |
 | `allowance.weekly_limit` | Granted calls in the current period; null for wallet-only accounts. |
 | `allowance.weekly_used` / `weekly_remaining` | Spent/reserved calls and available calls. |
@@ -21,7 +21,9 @@ curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
 | `allowance.wallet.balance_micro_usd` | Exact balance in millionths of one USD. |
 | `allowance.payg_rate_per_1000_usd` | Current wallet price per 1,000 successful generations. |
 | `allowance.complimentary_remaining` | Unexpired trial/bonus calls, separate from paid calls and funds. |
-| `allowance.trial_ends_at` / `trial` | Current trial deadline/details when applicable; a trial may lower the effective rate limit. |
+| `allowance.trial_ends_at` / `trial` | Current trial deadline/details when applicable. A verified paid purchase removes the trial-only RPS cap even while complimentary requests remain. |
+
+The returned rate is your current account-wide limit across all API keys. Internal concurrency and burst admission are managed by the service; configured RPS is not reserved capacity.
 
 Display wallet funds as authoritative. `prepaid_remaining` is a deprecated standard-rate call equivalent, not the USD balance. `legacy_prepaid_deprecated` identifies that compatibility view. Legacy `daily_used`/`monthly_used` are analytics only; no daily or monthly request cap is enforced.
 

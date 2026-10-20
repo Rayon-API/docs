@@ -63,4 +63,4 @@ No target cookies are returned. [Apply names and values unchanged](../guide/appl
 | Each URL | 8,192 characters |
 | Header output / API response | 256 KiB |
 
-Uploads have a 20-second deadline. Concurrent uploads/generation are bounded; excess capacity returns 429 without queueing. See [errors](./errors.md) and [usage](./usage.md).
+Uploads have a 20-second deadline. Short bursts may wait briefly before admission. Sustained rate or capacity pressure returns 429; unavailable admission capacity returns 503. These pre-admission rejections do not charge generation credits. See [errors](./errors.md) and [usage](./usage.md).

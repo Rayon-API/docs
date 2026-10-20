@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-20
+
+- Document SDK 1.1.4 material recovery, coalescing, retained-source bounds and overall deadlines.
+- Correct trial/general/enterprise rate guidance and paid conversion with complimentary calls remaining.
+- Describe bounded burst admission, cache pressure and the distinction between configured rates and measured capacity.
+
 ## Documentation audit
 
 - Aligned guides and navigation with the current API contract.

@@ -28,7 +28,7 @@ Messages and actions are safe explanations, never raw internal exceptions.
 | 413 | `input_too_large`: reduce input within [limits](./shape.md#input-limits). |
 | 415 | Unsupported content type/encoding. |
 | 422 | Invalid request/profile, unsupported material, expired reference or ambiguous header family. |
-| 429 | `rate_limited`: slow requests; `concurrency_exceeded`: reduce in-flight requests; `capacity_exceeded`: wait for service capacity. Respect `Retry-After`. |
+| 429 | `material_cache_full`: reuse existing material or wait for cache space; `rate_limited`: slow requests; `concurrency_exceeded`: reduce in-flight requests; `capacity_exceeded`: wait for service capacity. Respect `Retry-After`. |
 | 503 | `credits_warming`: credits are being prepared; retry after `Retry-After: 1` (`retryable: true`). Other 503 errors mean service or worker unavailable. |
 | 504 | Generation timed out. |
 
@@ -48,7 +48,7 @@ For support, share the request ID and safe code. Keep scripts, cookies, keys and
 
 ## Decide whether to retry
 
-`error.retryable` is optional. `true` identifies a temporary error; `false` means correct the request or investigate first. An absent value is unknown. Respect `Retry-After`, add jitter and reduce concurrency. Neither SDK retries generation automatically; each explicit retry is a new request.
+`error.retryable` is optional. `true` identifies a temporary error; `false` means correct the request or investigate first. An absent value is unknown. Respect `Retry-After`, add jitter and reduce concurrency. SDK 1.1.4+ makes one automatic recovery attempt only after HTTP 422 `material_expired` with `billing_status: not_charged`, using original scripts still retained in that client. There are no background generation requests. Other errors, cancellation and uncertain outcomes are never automatically retried; each explicit retry is a new request.
 
 After a client/network timeout or a response with `billing_status: pending` or `unknown`, check request history before resubmitting. Generation may already have completed. Contact support with the request ID if the outcome remains unclear.
 
