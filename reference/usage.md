@@ -12,7 +12,7 @@ curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
 | Field | Meaning |
 | --- | --- |
 | `request_id` | Correlation ID. |
-| `limits.requests_per_second` | Account generation rate limit, shared across keys; trials have a 15 RPS ceiling, general accounts default to 500 RPS, and enterprise accounts default to 1,000 RPS with administrator-set overrides up to 10,000 RPS. Lower account limits and server capacity still apply. |
+| `limits.requests_per_second` | Account generation rate limit, shared across keys; trials have a 15 RPS ceiling, general accounts default to 500 RPS, and enterprise accounts default to 5,000 RPS with administrator-set overrides up to 10,000 RPS. Lower account limits and server capacity still apply. |
 | `allowance.kind` | `subscription`, `owner`, `custom` or `wallet`; legacy `prepaid` may remain. |
 | `allowance.weekly_limit` | Granted calls in the current period; null for wallet-only accounts. |
 | `allowance.weekly_used` / `weekly_remaining` | Spent/reserved calls and available calls. |

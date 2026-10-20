@@ -951,7 +951,7 @@
                 "type": "number",
                 "maximum": 10000,
                 "exclusiveMinimum": 0,
-                "description": "Effective account-wide RPS across all keys: trial ceiling 15, general default 500, enterprise default 1000 with administrator overrides up to 10000. Lower account limits and service capacity still apply. Verified paid purchases remove trial-only caps while complimentary calls remain."
+                "description": "Effective account-wide RPS across all keys: trial ceiling 15, general default 500, enterprise default 5000 with administrator overrides up to 10000. Lower account limits and service capacity still apply. Verified paid purchases remove trial-only caps while complimentary calls remain."
               }
             }
           },
