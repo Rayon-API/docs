@@ -1,24 +1,32 @@
-# Collect inputs for your first request
+# Prepare your first request
 
-Use your browser's actual traffic to identify the material. The API receives what you collect; it does not inspect the site.
+Prepare these inputs in your existing integration, then pass them to an SDK. Use browser capture or downloads only for inputs your flow still needs. The SDK and API do not discover or download scripts.
 
-## 1. Find the protection scripts
+## Prepared SDK inputs
 
-1. Open the source page in your browser. In DevTools → **Network**, enable **Preserve log**, clear the log and perform the intended action.
-2. Select the protected application request. Record its URL, method, content type, body and required application headers.
-3. Inspect **Initiator** and nearby JavaScript requests to identify the protection loader, payload and required dependencies. Dynamic payloads may appear only after the action.
-4. Copy each full script URL, including query parameters, and note execution order. Inspect the response source to confirm it is protection JavaScript.
+### 1. Prepare the script sources and request
 
-`source_url` is the page where that code executes, such as `https://shop.example.com/account`; `request.url` is the endpoint you will call. Script URLs describe script location and execution context. None tells RayonAPI to download anything.
+| Input | What to supply |
+| --- | --- |
+| `source_url` | The page where the protection executes. It provides context and is never fetched by the API. |
+| `scripts` | The required protection scripts in execution order, each with its complete URL and full decoded JavaScript `source`. |
+| `profile` | A supported profile object representing the environment for your flow. See the next step. |
+| `request` | Exact `url`, `method`, `content_type` and UTF-8 `body`; include all four fields. GET/HEAD use a null body. |
+| `document_cookie` | Optional current JavaScript-visible source-document cookies, only when needed by the protection. Default: empty string. |
 
-An initiator chain is evidence to inspect, not a list to upload wholesale. Scanning static HTML or downloading every `<script>` cannot guarantee a complete bundle.
+Use scripts you already have or download the selected sources with your integration's HTTP client. Preserve complete URLs, including query parameters, and complete source without trimming or beautifying. A URL alone does not tell RayonAPI to download a script. See [material preparation](./material.md) for an optional download example and limits.
 
-## 2. Save the measured profile
+If you need to identify the scripts, browser DevTools is one way to inspect the real flow: enable **Preserve log** in **Network**, perform the intended action, then inspect the protected request, its **Initiator** chain and nearby JavaScript responses. Record required loader, payload and dependencies in execution order. An initiator chain is evidence to inspect; uploading every script on a page does not establish a correct bundle.
 
-1. Open the [profile collector](/examples/capture-profile.js), select all its source and copy it.
-2. On the source page, open DevTools → **Sources → Snippets**, create a snippet, paste the code and run it with **Ctrl+Enter** (**Cmd+Enter** on macOS).
-3. The final `copy(...)` call places JSON on your clipboard. Paste it into a local UTF-8 file named `profile.json`, outside source control.
-4. Validate it before generation:
+Record the target request's URL, method, content type and exact body. Keep application authentication, CSRF tokens and other required headers in your target integration. A browser session, cookie import, proxy or particular HTTP transport is only needed when that target flow requires it.
+
+### 2. Prepare a profile
+
+Save your supported profile values in `profile.json`. Supplied values must match the environment represented by your integration. Omitted fields use emulation defaults, which are not measurements of your client. Supply actual screen, navigator, WebGL or canvas values when the protection depends on them; see [supported fields](./profiles.md).
+
+If you need values from an existing browser environment, the optional [profile capture snippet](/examples/capture-profile.js) reads identity, dimensions and available WebGL values. Run it as a DevTools **Sources → Snippets** snippet on the source page, then save its copied JSON as `profile.json`. It omits unavailable GPU values, cookies and protection-specific canvas pixels; collect those separately only if needed. Existing profile values do not require a new browser capture.
+
+Validate the file offline:
 
 ```python
 import json
@@ -28,53 +36,47 @@ from rayon_sdk_py import validate_profile
 profile = validate_profile(json.loads(Path("profile.json").read_text(encoding="utf-8")))
 ```
 
-The collector reads browser identity, dimensions and available WebGL values. It omits unavailable GPU values, cookies and protection-specific canvas pixels. Capture required canvas pixels separately. Match your target client's TLS impersonation and headers to this browser; the profile alone does not configure them.
+Validation checks supplied fields; it does not measure an environment or configure your target HTTP client's identity.
 
-## 3. Fetch the selected URLs in your client
+### 3. Assemble `shape.json`
 
-Use the [material download example](./material.md) with your chosen URLs and one `curl_cffi.Session`. Fetch the source page, required loader and payload through the same sticky proxy used for the final request. Check every response before saving source.
+This example reads two prepared script files and the exact UTF-8 request body. Replace the example URLs and file names with your own approved flow:
 
-Browser cookies are not automatically present in an HTTP client. Establish the client session's required application state; browser capture identifies the flow, while the client must collect material for its own current session.
+```python
+import json
+from pathlib import Path
 
-## 4. Generate for the exact request
-
-Supply the downloaded sources, profile, current JavaScript-visible cookies if needed, and all four request fields. Keep the original body string: whitespace, key order and Unicode bytes matter.
-
-For header mode, follow the [quickstart](./quickstart.md), then [apply the headers](./applying-headers.md) before closing the target session. For the beta form workflow, continue with [direct REST form integration](../form-payload-integration.md#use-direct-rest) in that same open session. Check target status and content for both protection challenges and application errors.
-
-## Run the complete example
-
-The [examples repository](https://github.com/Rayon-API/rayon-examples) provides a runnable workflow. It fetches explicitly supplied script URLs; it does not discover them.
-
-```sh
-git clone https://github.com/Rayon-API/rayon-examples.git
-cd rayon-examples
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-mkdir -p local
+shape = {
+    "source_url": "https://shop.example.com/account",
+    "scripts": [
+        {
+            "url": "https://shop.example.com/assets/protection-loader.js",
+            "source": Path("loader.js").read_bytes().decode("utf-8"),
+        },
+        {
+            "url": "https://shop.example.com/assets/protection-payload.js?seed=observed",
+            "source": Path("payload.js").read_bytes().decode("utf-8"),
+        },
+    ],
+    "profile": json.loads(Path("profile.json").read_text(encoding="utf-8")),
+    "request": {
+        "url": "https://shop.example.com/api/username",
+        "method": "POST",
+        "content_type": "application/json",
+        "body": Path("request-body.txt").read_bytes().decode("utf-8"),
+    },
+}
+Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="utf-8")
 ```
 
-Save `local/profile.json`, your exact UTF-8 `local/request-body.txt`, and `local/document-cookie.txt` (current JavaScript-visible cookie string with no trailing newline; an empty file is allowed). For a matching browser-state import, run `copy(document.cookie)` in the source page Console and save the clipboard without an added newline; do not use a snapshot from an unrelated session. Set URL variables from your integration and `CHROME_PROFILE` to the matching transport profile.
+When needed, add `document_cookie` with current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. Keep cookies and material current for flows that bind them to a session.
 
-```sh
-python -m examples.request_workflow \
-  --source-url "$SOURCE_URL" \
-  --request-url "$REQUEST_URL" \
-  --method POST \
-  --content-type application/json \
-  --body-file local/request-body.txt \
-  --profile local/profile.json \
-  --document-cookie-file local/document-cookie.txt \
-  --script-url "$LOADER_URL" \
-  --script-url "$PAYLOAD_URL" \
-  --impersonate "$CHROME_PROFILE"
-```
+Continue with the [SDK quickstart](./quickstart.md#5-generate-and-apply). Reuse the SDK client across generations, update the request and other changing inputs each time, and apply the result using your target integration. Preserve the exact body string: whitespace, key order and Unicode bytes matter. For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md); both SDKs and direct REST support it.
 
-This validates inputs offline. Add `--fetch-and-generate` to collect material and call RayonAPI, or `--send` for collection → generation → target request in one live session. Set `RAYON_API_KEY` for either network mode. The generation-only mode does not preserve a session for a later send.
+## Optional Python download helper
 
-Optional inputs: `--cookies-file local/cookies.txt` imports a scoped Netscape HTTP cookie jar; `--headers-file local/headers.json` supplies application headers. Set `RAYON_TARGET_PROXY` for a sticky proxy; ambient proxies are disabled. Preserve export metadata where available; the transport does not retain every browser attribute. Keep the separate document-cookie snapshot consistent with cookies updated during collection.
-
-The helper allows the source page's HTTPS origin by default. For another approved endpoint origin, add `--allow-request-origin https://api.shop.example.com` (repeat for each origin). Use an origin without path/query; the jar preserves cookie scope across hosts. Output contains a request ID and, with `--send`, target HTTP status. Inspect target content in your integration to establish acceptance.
-
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.
+Use the [examples workflow](https://github.com/Rayon-API/rayon-examples/blob/main/docs/workflow.md)
+when you want explicitly selected script downloads and optional target sending through
+one `curl_cffi` session. It is optional; keep your current integration when it already
+provides these inputs. The workflow reference covers config, cookie scope, form mode,
+allowed origins, offline validation and explicit network flags.

@@ -39,7 +39,9 @@ export default defineConfig({
         { text: 'Form payload integration', link: '/form-payload-integration' },
         { text: 'Python SDK', link: '/guide/python' },
         { text: 'JavaScript SDK', link: '/guide/javascript' },
-        { text: 'Direct REST examples', link: '/guide/rest' },
+        { text: 'Go SDK', link: '/guide/go' },
+        { text: 'Playwright SDK', link: '/guide/playwright' },
+        { text: 'Direct REST (advanced)', link: '/guide/rest' },
         { text: 'Shape / F5', link: '/guide/shape-f5' },
         { text: 'Troubleshooting', link: '/guide/troubleshooting' }
       ] },

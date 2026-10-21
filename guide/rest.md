@@ -1,4 +1,6 @@
-# Direct REST
+# Direct REST (advanced)
+
+Use the [SDK quickstart](./quickstart.md) for the recommended integration. Use direct REST when you need to own validation, material references, result parsing and retry handling yourself.
 
 ## 1. Prepare the request file
 
@@ -102,4 +104,4 @@ func main() {
 
 ## 3. Send the target request
 
-[Apply the returned headers](./applying-headers.md) in the session that collected material. These examples call only RayonAPI; they do not collect scripts or send target requests.
+[Apply the returned headers](./applying-headers.md) using your target integration, preserving session state when the flow requires it. These examples call only RayonAPI; they do not collect scripts or send target requests.

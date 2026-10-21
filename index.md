@@ -2,8 +2,8 @@
 layout: home
 hero:
   name: RayonAPI
-  text: Shape header generation
-  tagline: Collect protection scripts. Generate headers. Send your exact request.
+  text: Shape telemetry generation
+  tagline: Install an SDK. Prepare inputs. Generate and apply fresh telemetry.
   actions:
     - theme: brand
       text: Get started
@@ -13,12 +13,12 @@ hero:
       link: /reference/shape
 ---
 
-RayonAPI generates Shape / F5 telemetry headers from your downloaded JavaScript, browser profile and request context.
+RayonAPI generates Shape / F5 headers or form telemetry from your supplied JavaScript, profile and request context.
 
-1. Your client collects the protection scripts and keeps the target session.
-2. `POST /v1/shape` returns fresh headers for one exact request.
-3. Your client sends that request with the headers and its existing cookies.
+1. Install an SDK and check account usage for free.
+2. Supply prepared scripts, profile values and exact request details.
+3. Generate fresh telemetry and apply it through your existing HTTP client or browser.
 
 The API never downloads target URLs. A generated header family does not guarantee target acceptance.
 
-Start with the [quickstart](./guide/quickstart.md), or [collect material](./guide/preparation-walkthrough.md) for your first integration.
+Start with the [quickstart](./guide/quickstart.md), or [prepare inputs](./guide/preparation-walkthrough.md) for your first integration.

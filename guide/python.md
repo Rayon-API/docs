@@ -10,7 +10,7 @@ python -m pip install 'rayon-sdk-py>=1.1.4,<2'
 
 ## 2. Generate with a persistent client
 
-Prepare `shape.json` using the [collection guide](./preparation-walkthrough.md) and [request contract](../reference/shape.md).
+Start with the [Quickstart](./quickstart.md). Prepare `shape.json` using the shared [input guide](./preparation-walkthrough.md). Check free account usage before generation, then apply the result through your existing target integration.
 
 ```python
 import json
@@ -20,8 +20,8 @@ from rayon_sdk_py import Client
 
 shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
 with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
+    usage = client.usage()  # Free; no generation quota used.
     result = client.generate(shape)
-    usage = client.usage()
 # Apply result.headers in your existing target session.
 ```
 
@@ -30,9 +30,12 @@ For async applications:
 ```python
 from rayon_sdk_py import AsyncClient
 
-async def generate_headers(shape, api_key):
+async def run_integration(shapes, api_key):
     async with AsyncClient(api_key, timeout=45) as client:
-        return await client.generate(shape)
+        usage = await client.usage()  # Free check.
+        for shape in shapes:
+            result = await client.generate(shape)
+            # Apply the result through your existing target integration.
 ```
 
 ## 3. Handle results and errors
@@ -51,12 +54,18 @@ except RayonError as error:
 
 `billing_status == "not_charged"` confirms no charge. An absent billing status is unknown. See [error and retry guidance](../reference/errors.md).
 
-SDK 1.1.4+ persistent clients retain original source in memory (at most 128 bundles and 16 MiB per client), reuse references for identical ordered material, and refresh on the next generation within five seconds of expiry. Concurrent callers share the material upload; every caller still generates its own result with current inputs. There is no background generation. After a definite HTTP 422 `material_expired` response with `billing_status: "not_charged"`, the client retries once with retained source. Other errors and ambiguous billing outcomes are never retried automatically. Reference-only recovery requires source still retained in the same client; keep your own source copy. Closing the client clears retained source. The one-shot `generate(shape, api_key)` helper closes after one call.
+Keep one client open across requests. Python and JavaScript SDK 1.1.4 reuse material
+in both modes and generate fresh telemetry each time. The shared [material policy](./material.md#4-reuse-source-with-a-material-reference)
+covers retention, expiry, concurrent calls and the single confirmed uncharged recovery.
+Other generation failures are not automatically retried. The one-shot helper closes
+after one call, so use a persistent client for an integration.
 
 Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for types and options.
 
 `result.generation_ms` measures server generation. Time the complete `client.generate()` call to measure upload, network and API latency. A client timeout can occur after billing settlement; check usage/history before retrying.
 
-SDK 1.1.0+ supports six required headers with optional same-family `a0`. Upgrade older SDKs, which require exactly six headers. Forward the complete returned map unchanged, without appending captured `a0` or splitting `a`.
+Forward the complete returned header map unchanged, including optional same-family `a0`. Never append captured telemetry or split `a`.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; the SDK supports form mode.
+
+[Python](./python.md) · [JavaScript / TypeScript](./javascript.md) · [Go](./go.md) · [Playwright](./playwright.md)

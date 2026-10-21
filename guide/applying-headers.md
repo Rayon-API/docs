@@ -1,8 +1,8 @@
 # Apply generated headers
 
-## 1. Keep the collecting session open
+## 1. Prepare your target client
 
-Use the target session that downloaded material, with its scoped cookie jar, sticky proxy and matching browser transport. Prepare `application_headers` with the target's required authentication, CSRF, Origin and Referer fields; exclude stale telemetry.
+Use your integration's target HTTP client. When the flow binds material to a session, keep that session and its required cookies, proxy and transport identity consistent through sending. Prepare `application_headers` with authentication, CSRF, Origin and Referer fields required by the target; exclude stale telemetry. The example below assumes an existing `target_session` and a profile with `user_agent`.
 
 ## 2. Send the exact request
 

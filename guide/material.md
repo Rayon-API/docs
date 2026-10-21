@@ -1,16 +1,18 @@
-# Download protection material
+# Prepare protection material
+
+The SDK accepts complete script sources you already have. Downloading through a particular client is optional; use the example below when your integration needs to fetch selected URLs.
 
 ## 1. Choose the URLs
 
-Use [browser Network inspection](./preparation-walkthrough.md) to select the protection loader, payload and required dependencies in execution order. Preserve complete URLs, including seeds and query strings. Replace the reserved example URLs below with those you observed.
+Select the protection loader, payload and required dependencies in execution order. If you need to identify them, [Network inspection](./preparation-walkthrough.md#1-prepare-the-script-sources-and-request) can help. Preserve complete URLs, including seeds and query strings. Replace the reserved example URLs below with those for your flow.
 
-## 2. Download through one target session
+## 2. Optional: Download through one target session
 
 ```sh
 python -m pip install curl_cffi
 ```
 
-Set `CHROME_PROFILE` to a browser profile supported by [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/api.html) that matches your measured browser. Set `RAYON_TARGET_PROXY` when you use a sticky proxy.
+This example chooses `curl_cffi` as its target client. Set `CHROME_PROFILE` to a supported [curl_cffi impersonation profile](https://curl-cffi.readthedocs.io/en/latest/api.html) appropriate to your flow, with matching supplied profile values. Set `RAYON_TARGET_PROXY` if that flow uses a proxy. These are settings for this example, not required SDK or API inputs.
 
 ```python
 import json
@@ -59,17 +61,17 @@ Path("material.json").write_text(json.dumps(material, ensure_ascii=False), encod
 # Generate and apply headers before closing target_session.
 ```
 
-A JavaScript MIME type and HTTP 200 are preliminary checks. Compare the source with the observed protection response; neither proves you collected the correct or complete bundle. Resolve relative URLs against the actual source page. Inspect redirects explicitly rather than following them with session credentials.
+A JavaScript MIME type and HTTP 200 are preliminary checks. Compare the source with the expected protection response; neither proves you collected the correct or complete bundle. Resolve relative URLs against the actual source page. Inspect redirects explicitly rather than following them with session credentials.
 
 Keep complete decoded source, without trimming, beautifying or replacing it with comments. If decoding fails or a site serves scripts with another content type, inspect its actual encoding/content before adapting the checks.
 
 ## 3. Keep cookies and context current
 
-The session owns your cookie jar. `material.json` does not save cookies, proxy settings or login state; do not restart with a fresh session and assume the file restores them.
+For flows that require session state, the target session owns the cookie jar. `material.json` does not save cookies, proxy settings or login state; a fresh session does not restore that state from this file. Keep the same target session open through sending when the flow binds material to it.
 
 If the protection reads `document.cookie`, supply `document_cookie` containing current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. An empty string is the default. Do not flatten the full jar into this field.
 
-Use the measured [profile](./profiles.md) and exact [request fields](../reference/shape.md). RayonAPI never fetches missing scripts or network dependencies.
+Use a [profile](./profiles.md) appropriate to the represented environment and exact [request fields](../reference/shape.md). RayonAPI never fetches missing scripts or network dependencies.
 
 ## 4. Reuse source with a material reference
 
@@ -85,8 +87,28 @@ next_shape = {
 }
 ```
 
-Supply exactly one of `scripts` and `material_ref`. References have a lifetime of up to five minutes and can disappear earlier after a restart or on another instance. Use the returned `material_expires_at`; uploading identical material can reuse an existing reference without extending its expiry. Retain source to upload again after `material_expired`. SDK 1.1.4+ coalesces uploads and refreshes on the next real request near expiry. It recovers once from a confirmed unbilled cache miss only while the same client retains the original scripts. No target scripts are fetched and no background generation is performed. Every generation still needs current request, profile and cookie inputs.
+Supply exactly one of `scripts` and `material_ref`. References are scoped to the
+API key and original source URL, last up to five minutes and can expire earlier after
+eviction or restart. Use `material_expires_at`; uploading identical material need not
+extend its expiry. Each generation still uses current profile, request and cookie inputs.
+
+Python and JavaScript SDK 1.1.4 clients retain original source in memory (up to 128
+bundles and 16 MiB per client). Identical ordered sources reuse a reference in header
+and form modes. Within five seconds of expiry, the next call uploads retained sources
+again; concurrent callers share the upload and then generate their own results. There
+is no background generation or target-script download.
+
+A definite HTTP 422 `material_expired` with `billing_status: "not_charged"` receives
+one recovery attempt with retained source. Reference-only recovery requires the source
+to remain in that same client. Other generation failures are not automatically retried;
+timeouts and uncertain billing require checking request history first. A failed upload
+fails queued callers before generation; cancelling a queued caller does not cancel the
+owner's upload.
+
+Retention ends on eviction or close and is not shared between clients, API keys or API
+hosts. Keep your own source copy. See [errors](../reference/errors.md) for billing and
+retry guidance.
 
 Source limits: 16 scripts, 2 MiB each, 3 MiB total. See [all limits](../reference/shape.md#input-limits).
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.
+For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by the SDKs.

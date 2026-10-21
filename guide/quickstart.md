@@ -1,37 +1,44 @@
 # Quickstart
 
+Use an SDK with your existing HTTP client or browser. The same input and application
+steps apply to Python, JavaScript / TypeScript, Go and Playwright integrations.
+
 ## 1. Create an API key
 
-Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies, request approval for your source and endpoint domains, then create a key. Store it server-side as `RAYON_API_KEY`.
+Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies,
+request approval for your source and endpoint domains, then create a key. Store it
+server-side as `RAYON_API_KEY`. See [usage and access](../reference/usage.md) for
+allowance details; the first check below is free.
 
-After creating your key, join the [RayonAPI Discord server](https://discord.gg/TwhkJNyHWs) and claim the 1,000-request trial in the dashboard. It is available once per Discord identity and expires after seven days. A verified paid purchase removes the trial-only rate cap even if complimentary requests remain.
+## 2. Install your SDK
 
-## 2. Install an SDK
+| Integration | Install / guide |
+| --- | --- |
+| Python 3.10+ | `python -m pip install 'rayon-sdk-py>=1.1.4,<2'` · [Python](./python.md) |
+| Node.js 20.18.1+ | `npm install rayon-sdk-js@^1.1.4` · [JavaScript / TypeScript](./javascript.md) |
+| Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go@v1.0.0` · [Go](./go.md) |
+| Existing Playwright page | [Playwright source setup](./playwright.md), npm release pending |
 
-```sh
-python -m pip install 'rayon-sdk-py>=1.1.4,<2'
-```
+## 3. Check usage for free
 
-```sh
-npm install rayon-sdk-js@^1.1.4
-```
+Create one SDK client and call `usage()` before generating. Usage reads do not
+consume generation quota. The [language guides](./python.md) show the same sequence
+for each client. For example:
 
-## 3. Check access
+## 4. Prepare inputs
 
-This free call verifies your key and shows available allowance:
+Follow the [input guide](./preparation-walkthrough.md): source-page URL, complete
+ordered script sources, a profile object and the exact target request. Save these
+as `shape.json` or construct the equivalent object in your application.
 
-```sh
-curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
-  -H "Authorization: Bearer $RAYON_API_KEY"
-```
+Use browser measurements and JavaScript-visible cookies only when required by your
+flow. Keep application authentication, cookies, proxy and transport settings in your
+existing integration. The [optional Python helper](https://github.com/Rayon-API/rayon-examples)
+can download explicit script URLs when useful; it is not required for SDK setup.
 
-## 4. Collect the inputs
+## 5. Generate and apply
 
-Follow [your first integration](./preparation-walkthrough.md) to find the protection scripts, download their full source and save a measured `profile.json`. The resulting `material.json` contains `source_url` and ordered `scripts`.
-
-Keep the target HTTP session open: its cookie jar, proxy and browser identity are needed when you send the application request.
-
-## 5. Generate and apply headers
+Use one persistent client to check usage and generate from your prepared inputs:
 
 ```python
 import json
@@ -39,29 +46,20 @@ import os
 from pathlib import Path
 from rayon_sdk_py import Client
 
-material = json.loads(Path("material.json").read_text(encoding="utf-8"))
-profile = json.loads(Path("profile.json").read_text(encoding="utf-8"))
-body = '{"username":"example_user"}'
-shape = {
-    **material,
-    "profile": profile,
-    "request": {
-        "url": "https://shop.example.com/api/username",
-        "method": "POST",
-        "content_type": "application/json",
-        "body": body,
-    },
-    # Add current document_cookie if the protection scripts read it.
-}
-Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="utf-8")
 with Client(os.environ["RAYON_API_KEY"]) as client:
+    print(client.usage())  # Free check before generation.
+    shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
     result = client.generate(shape)
-# Continue with the target_session that collected this material.
-# Apply result.headers and send body.encode("utf-8") unchanged.
+    # Apply result.headers using your existing target client.
+    # Reuse client here for further requests with their current inputs.
 ```
 
-Replace the example endpoint with your approved endpoint. [Apply the headers](./applying-headers.md) in the existing target session and inspect the target response.
+[Apply every returned header](./applying-headers.md) unchanged, including optional
+`a0`. For observed form telemetry, use [Form payload integration](../form-payload-integration.md)
+instead. Inspect the target response: generation does not establish target acceptance.
 
-The SDK and API do not collect material or send the target request. Header mode returns six required suffixes `a/b/c/d/f/z` and may include a same-family `a0` freshly emitted by the scripts. Forward the complete map unchanged; never append captured telemetry or split `a` yourself. SDK 1.1.0+ supports optional `a0`; upgrade older SDKs, which require exactly six headers.
-
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by SDK 1.1.0+ and direct REST.
+Reuse the SDK client across calls, updating request and session inputs as needed.
+See [material reuse](./material.md#4-reuse-source-with-a-material-reference) and
+[errors](../reference/errors.md) for reference lifetime, bounded recovery and uncertain
+billing outcomes. Direct [REST](./rest.md) is an advanced fallback when you need to
+implement the API contract yourself.

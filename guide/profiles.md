@@ -1,6 +1,6 @@
 # Browser profiles
 
-Measure the browser identity used by your target session. Follow the [profile capture steps](./preparation-walkthrough.md#2-save-the-measured-profile); the API does not launch a browser or measure your GPU.
+Supply profile values that match the environment represented by your integration. Use existing values, or follow the optional [profile capture steps](./preparation-walkthrough.md#2-prepare-a-profile) when you need measurements from a browser. The API does not launch a browser or measure your GPU.
 
 ## Supported fields
 

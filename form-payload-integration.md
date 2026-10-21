@@ -1,6 +1,6 @@
 # Form payload integration
 
-Form mode is a beta workflow for supported material. Use it when the observed protected request carries Shape telemetry in its URL-encoded body. Header mode remains the default. Both use `POST /v1/shape`.
+Form mode generates URL-encoded telemetry for supported material. Use it when the observed protected request carries Shape telemetry in its URL-encoded body. Header mode remains the default. Both use `POST /v1/shape`.
 
 The documented six-field response applies to supported material. Sites may use other families; inspection alone does not establish compatibility. Unsupported or incomplete output returns an error. Generation success does not guarantee target acceptance.
 
@@ -81,7 +81,7 @@ Synthetic response excerpt (values are illustrative, not usable telemetry):
 Prepend `form_body`, followed by `&` and the application body only when that body is nonempty. These snippets use `result` from generation and the exact application body you supplied:
 
 ```python
-# result: FormShapeResult from Client.generate(shape) in SDK 1.1.0.
+# result: FormShapeResult from Client.generate(shape) in SDK 1.1.4.
 wire_body = (
     result.form_body + ("&" + application_body if application_body else "")
 ).encode("utf-8")
@@ -89,18 +89,18 @@ wire_body = (
 ```
 
 ```javascript
-// result: FormShapeResult from await client.generate(shape) in SDK 1.1.0.
+// result: FormShapeResult from await client.generate(shape) in SDK 1.1.4.
 const wireBody = result.form_body + (applicationBody ? "&" + applicationBody : "");
 // Send wireBody as the raw body through your existing target session.
 ```
 
-SDK 1.1.0 is published for Python and JavaScript with typed `FormShapeResult` and optional header `a0` support. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
+Form mode was introduced in SDK 1.1.0; use the current SDK 1.1.4. SDK 1.1.4 is published for Python and JavaScript with typed `FormShapeResult` and optional header `a0` support. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
 
 Do not URL-encode `form_body` again or pass the combined body to a form serializer. A serializer may turn `%` into `%25`, collapse duplicate keys or change application encoding. If you need to rebuild a form, iterate `form_fields` with `.items()` or `Object.entries` in returned order, append the application's ordered pairs, and serialize that entire list **once**, without also adding `form_body`. Never merge pairs into a dictionary/object.
 
 ## Use direct REST
 
-Form mode is live on `POST https://api.rayonapi.com/v1/shape` and supported by SDK 1.1.0+. The following Python example calls REST directly, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
+Form mode is live on `POST https://api.rayonapi.com/v1/shape` and supported by SDK 1.1.4+. The following Python example calls REST directly, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
 
 Save current source-page `document.cookie` in `document-cookie.txt` without a trailing newline. Save observed required target headers as `application-headers.json`; keep authentication/CSRF when required, and exclude the RayonAPI key. Replace the generic endpoint, origin allowlist and form selectors with the approved values you observed. Include clicked-submit data in `request-body.txt` and remove only stale telemetry before this call.
 
