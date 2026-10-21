@@ -2,20 +2,14 @@
 
 Use this optional server-side adapter when you already own a Playwright `Page`.
 It wraps the JavaScript SDK and keeps your browser, context, proxy and session under
-your control. The [source repository](https://github.com/Rayon-API/rayon-sdk-playwright)
-is public; npm publication is pending. Build and install from source:
+your control. Requires Node.js 20.18.1+ and your existing Playwright setup.
+Install the published 0.1.0 package:
 
 ```sh
-git clone https://github.com/Rayon-API/rayon-sdk-playwright.git
-cd rayon-sdk-playwright
-npm ci
-npm run build
-# Run from your application directory, using your existing Playwright setup.
-cd /path/to/your-application
-npm install /path/to/rayon-sdk-playwright
+npm install rayon-sdk-playwright@^0.1.0 playwright-core
 ```
 
-The package name is `rayon-sdk-playwright`; registry installation is not available yet.
+[Source and releases](https://github.com/Rayon-API/rayon-sdk-playwright).
 
 ## Check usage, collect explicitly, generate and apply
 

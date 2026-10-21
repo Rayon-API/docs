@@ -17,7 +17,7 @@ allowance details; the first check below is free.
 | Python 3.10+ | `python -m pip install 'rayon-sdk-py>=1.1.4,<2'` · [Python](./python.md) |
 | Node.js 20.18.1+ | `npm install rayon-sdk-js@^1.1.4` · [JavaScript / TypeScript](./javascript.md) |
 | Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go@v1.0.0` · [Go](./go.md) |
-| Existing Playwright page | [Playwright source setup](./playwright.md), npm release pending |
+| Existing Playwright page | `npm install rayon-sdk-playwright@^0.1.0 playwright-core` · [Playwright](./playwright.md) |
 
 ## 3. Check usage for free
 
