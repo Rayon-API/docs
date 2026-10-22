@@ -20,8 +20,9 @@ curl --fail-with-body --max-time 30 https://api.rayonapi.com/v1/usage \
 | `allowance.wallet.balance_usd` | Available preloaded USD funds. |
 | `allowance.wallet.balance_micro_usd` | Exact balance in millionths of one USD. |
 | `allowance.payg_rate_per_1000_usd` | Current wallet price per 1,000 successful generations. |
-| `allowance.complimentary_remaining` | Unexpired trial/bonus calls, separate from paid calls and funds. |
-| `allowance.trial_ends_at` / `trial` | Current trial deadline/details when applicable. A verified paid purchase removes the trial-only RPS cap even while complimentary requests remain. |
+| `allowance.complimentary_remaining` | Available unrevoked trial/bonus calls, separate from paid calls and funds. |
+| `allowance.trial_ends_at` | Deprecated compatibility field; null for current complimentary credits. |
+| `allowance.trial` | Trial details when applicable; `expires_at` is null for current complimentary credits. A verified paid purchase removes the trial-only RPS cap even while complimentary requests remain. |
 
 The returned rate is your current account-wide limit across all API keys. Internal concurrency and burst admission are managed by the service; configured RPS is not reserved capacity.
 
@@ -31,7 +32,8 @@ Display wallet funds as authoritative. `prepaid_remaining` is a deprecated stand
 
 | Account | Allowance behavior |
 | --- | --- |
-| Paid subscription | Verified paid billing week; calls expire at that period's end and do not roll over. |
+| Paid subscription | Weekly requests reset at the verified paid billing week's end without rollover. |
+| Enterprise | Weekly request allocations reset without rollover. |
 | Owner | 100,000 calls, reset Monday 00:00 UTC; exhaustion does not spend wallet funds. |
 | Custom | Configured weekly limit, reset Monday 00:00 UTC; editing it preserves current usage. |
 | Wallet only | Preloaded USD funds have no expiry or weekly cap; standard PAYG rate applies. |
@@ -49,4 +51,4 @@ An eligible paid period takes precedence over a custom allowance. Available tria
 
 Standard PAYG is $5 per 1,000 successful calls. Wallet funding loads USD, in $5 units; it does not buy a fixed call count. Use the returned rate after plan changes or expiry. Purchase through the [dashboard](https://dashboard.rayonapi.com); contact support for crypto payments.
 
-One successful generation spends one weekly call or its recorded wallet amount. Failed generation releases reservations; validation and rate/capacity rejection are free. A client timeout does not prove failure—check request history before retrying.
+One successful generation spends one complimentary or weekly call, or deducts its recorded PAYG amount from wallet funds. Failed generation releases reservations; validation and rate/capacity rejection are free. A client timeout does not prove failure—check request history before retrying.

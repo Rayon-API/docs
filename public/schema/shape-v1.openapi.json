@@ -3,7 +3,7 @@
   "info": {
     "title": "Rayon API",
     "version": "1.1.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Unexpired complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
   },
   "servers": [
     {
@@ -1047,17 +1047,17 @@
               "bonus_remaining": {
                 "type": "integer",
                 "minimum": 0,
-                "description": "Available unexpired and unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
+                "description": "Available unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
               },
               "trial_remaining": {
                 "type": "integer",
                 "minimum": 0,
-                "description": "Available unexpired and unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
+                "description": "Available unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
               },
               "complimentary_remaining": {
                 "type": "integer",
                 "minimum": 0,
-                "description": "Available unexpired and unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
+                "description": "Available unrevoked complimentary calls; separate from paid weekly calls and wallet funds."
               },
               "trial_ends_at": {
                 "type": [
@@ -1065,7 +1065,8 @@
                   "null"
                 ],
                 "format": "date-time",
-                "description": "Deadline of the current free trial while calls remain; does not alter account access expiry or create renewal charges."
+                "description": "Deprecated compatibility field; null for current complimentary credits. Does not alter account access expiry or create renewal charges.",
+                "deprecated": true
               },
               "trial": {
                 "type": [
@@ -1106,8 +1107,12 @@
                     "format": "date-time"
                   },
                   "expires_at": {
-                    "type": "string",
-                    "format": "date-time"
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time",
+                    "description": "Null for current complimentary credits; historical timestamps are retained for compatibility."
                   },
                   "revoked_at": {
                     "type": [

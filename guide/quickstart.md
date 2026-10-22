@@ -7,8 +7,11 @@ steps apply to Python, JavaScript / TypeScript, Go and Playwright integrations.
 
 Open the [dashboard](https://dashboard.rayonapi.com), accept the current policies,
 request approval for your source and endpoint domains, then create a key. Store it
-server-side as `RAYON_API_KEY`. See [usage and access](../reference/usage.md) for
-allowance details; the first check below is free.
+server-side as `RAYON_API_KEY`.
+
+Join [Discord](https://discord.gg/TwhkJNyHWs) and claim 1,000 free requests in the
+dashboard. One claim per Discord identity. See [usage and access](../reference/usage.md)
+for allowance details; the first check below is free.
 
 ## 2. Install your SDK
 
