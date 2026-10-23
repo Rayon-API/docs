@@ -27,9 +27,9 @@ Messages and actions are safe explanations, never raw internal exceptions.
 | 408 | `input_timeout`: upload exceeded 20 seconds; no allowance consumed. |
 | 413 | `input_too_large`: reduce input within [limits](./shape.md#input-limits). |
 | 415 | Unsupported content type/encoding. |
-| 422 | Invalid request/profile, unsupported material, expired reference or ambiguous header family. |
+| 422 | Inspect the specific code: invalid input/profile, expired reference, incomplete generation, invalid generated output or `output_too_large`. |
 | 429 | `material_cache_full`: reuse existing material or wait for cache space; `rate_limited`: slow requests; `concurrency_exceeded`: reduce in-flight requests; `capacity_exceeded`: wait for service capacity. Respect `Retry-After`. |
-| 503 | `credits_warming`: credits are being prepared; retry after `Retry-After: 1` (`retryable: true`). Other 503 errors mean service or worker unavailable. |
+| 503 | `credits_warming`: credits are being prepared; retry after `Retry-After: 1` (`retryable: true`). An unrecognized worker 422 is reported as 503 `generation_unavailable`; it is not classified as invalid client input. Other 503 errors mean service or worker unavailable. |
 | 504 | Generation timed out. |
 
 A 403 `access_denied` can include these reasons. Existing `policies_required` and `domain_not_approved` codes remain valid.
@@ -44,6 +44,17 @@ A 403 `access_denied` can include these reasons. Existing `policies_required` an
 
 Check both source and endpoint hosts. Approval covers a root domain and its `www` alias; other subdomains need explicit approval. `domain_pending` is returned only when a pending request is known.
 
+Generation errors do not, by themselves, establish incorrect client input:
+
+| Code | Next step |
+| --- | --- |
+| `generation_incomplete` | Include all required scripts in execution order, including any script loaded by a starter/loader. If those are complete, contact support with the request ID. |
+| `generation_failed` | Check material completeness; contact support if complete inputs still fail. |
+| `generation_invalid_headers` / `generation_invalid_form` | Generated output failed validation. Contact support with the request ID. |
+| `output_too_large` | Generated output exceeded the response limit. Contact support with the request ID. |
+
+SDKs use trusted local error wording; upgrade when the corresponding SDK release is available. A successful generation response does not confirm that the target accepted the result.
+
 For support, share the request ID and safe code. Keep scripts, cookies, keys and private application bodies out of public reports. See [troubleshooting](../guide/troubleshooting.md).
 
 ## Decide whether to retry
@@ -54,6 +65,6 @@ After a client/network timeout or a response with `billing_status: pending` or `
 
 ## Check the billing outcome
 
-`billing_status: not_charged` means no allowance or wallet funds were used. `pending` means the billing record is still updating. `unknown` or an absent field means billing could not be confirmed. Failed generations are not billable; usage checks are free.
+`billing_status: not_charged` means no allowance or wallet funds were used. `pending` means the billing record is still updating; it does not confirm a charge. `unknown` or an absent field means billing could not be confirmed. Failed generations are not billable; usage checks are free.
 
 In **Dashboard → Request history**, select a domain and open **Details**. The panel shows the request ID, recorded HTTP status, timing and a safe explanation/action. **Not charged** confirms no allowance or wallet funds were consumed. **Processing billing** refreshes while the final record updates. For **Billing status unavailable**, refresh or contact support with the ID. Successful usage is identified as allowance or wallet usage. A generated header set does not prove acceptance by the target.

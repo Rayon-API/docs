@@ -3,7 +3,8 @@
 | Symptom | Next step |
 | --- | --- |
 | `invalid_input` | Check required fields, exact types, profile aliases and [input limits](../reference/shape.md#input-limits). |
-| `unsupported_material` / incomplete family | Confirm full protection source, exact URLs, loader dependencies and execution order. Check for HTML challenge responses. |
+| `unsupported_material` / `generation_incomplete` | Check full script source, exact URLs, loader dependencies and execution order. If all inputs are complete, contact support with the request ID; this error alone does not establish client fault. |
+| `generation_failed` / `generation_invalid_headers` / `generation_invalid_form` | Retain the request ID and contact support if complete inputs still fail. These codes distinguish failed generation from invalid generated output. |
 | `material_expired` | SDK 1.1.4+ recovers once from a confirmed unbilled miss when it retains the source. Otherwise, upload retained source with current context. References can disappear before expiry. |
 | HTTP 401 | Check that the API key is valid and active. |
 | HTTP 403 | Read `reason` and `action`: check expired access, contact support for a disabled account, accept policies or request domain approval. Check `domain` and `field` for the rejected host. |
@@ -13,7 +14,7 @@
 | HTTP 503 `credits_warming` | Credits are being prepared. Wait one second (`Retry-After: 1`) before retrying. |
 | Upload timeout | Keep within the 20-second upload deadline and size limits. |
 | Client timeout / cancellation, billing `pending` / `unknown` | Check request history before retrying; generation may already have completed. Contact support with the request ID if the outcome remains unclear. |
-| Headers generated, target blocked | Compare exact body bytes, URL/method/content type, TLS/browser identity, proxy, scoped cookies and required application headers. |
+| Headers generated, target blocked | Compare exact body bytes, URL/method/content type, TLS/browser identity, proxy, scoped cookies and required application headers. If those match, contact support with a sanitized paired exchange. API success alone does not establish target acceptance or client fault. |
 | Target returned 200 or an application error | Inspect content: a 200 can be a challenge, and a business error alone does not prove header acceptance. |
 
 Domain approval covers a root domain and its `www` alias. Other subdomains need explicit approval. `domain_pending` means an approval request is known to be pending.

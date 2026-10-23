@@ -116,7 +116,7 @@
             }
           },
           "422": {
-            "description": "invalid_input, unsupported_profile, unsupported_material or material_expired",
+            "description": "invalid_input, unsupported_profile, unsupported_material, material_expired, generation_failed, generation_incomplete, generation_invalid_headers, generation_invalid_form or output_too_large. Known worker failure codes are preserved. Read message/action for guidance and retain request_id; a generation failure alone does not establish incorrect client input.",
             "headers": {
               "X-Request-ID": {
                 "schema": {
