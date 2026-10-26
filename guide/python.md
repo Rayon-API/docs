@@ -85,7 +85,7 @@ combine the explicit steps. `AsyncClient` exposes all four with `await`.
 `ReadyMaterial` contains metadata only. `PreparationError` exposes `kind` and
 `preparation_id`; terminal kinds are `failed` and `expired`, and a bounded wait
 can raise `timeout`. Polling errors also retain the safe job ID. Async wait
-cancellation remains `asyncio.CancelledError` with a `preparation_id`; the server
+cancellation raises `PreparationError` with `kind="aborted"` and a `preparation_id`; the server
 job continues. No arbitrary generation retry or implicit prepare occurs.
 
 Prepare the exact full context again when readiness expires or request/profile/

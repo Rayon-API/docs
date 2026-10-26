@@ -100,8 +100,8 @@ JavaScript waits default to `waitTimeoutMs: 60000`; Python waits default to
 Wait helpers use a monotonic budget and bounded long polling. Timeout/error metadata
 includes a validated preparation ID so callers can resume an existing job.
 Cancelling a wait stops the client wait; the server job continues running.
-Python async cancellation remains an `asyncio.CancelledError` with a safe
-`preparation_id`. It does not send a server-side cancellation request.
+Python async cancellation raises a typed `PreparationError` with `kind="aborted"`
+and a safe `preparation_id`. It does not send a server-side cancellation request.
 
 Playwright `collectMaterial` only collects `CollectedMaterial`. The old
 `PreparedMaterial` collector type is a deprecated alias, not evidence of server
