@@ -17,8 +17,8 @@ curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/materials/prepar
   --data-binary @shape.json
 ```
 
-This is a coordinated preparation API preview. Confirm route availability before
-running it. Read the returned state and use authenticated status reads at
+The additive preparation API is available. Read the returned state and use
+authenticated status reads at
 `/v1/materials/preparations/{preparation_id}?wait=10` until ready; do not send a
 workload while queued/learning/validating/publishing. See the
 [complete preparation contract](../reference/preparation.md). The runnable examples
@@ -32,7 +32,7 @@ Use uncompressed JSON first. Gzip requests must meet both compressed and decoded
 [Source](https://github.com/Rayon-API/docs/blob/main/examples/rest.py).
 
 ```python
-"""Coordinated preparation API preview; use the SDK for complete contract validation."""
+"""Preparation API example; use the SDK for complete contract validation."""
 import json
 import os
 import random
@@ -136,7 +136,7 @@ print("Generated request:", result["request_id"])
 [Source](https://github.com/Rayon-API/docs/blob/main/examples/rest.mjs).
 
 ```javascript
-// Coordinated preparation API preview; use an SDK for complete contract validation.
+// Preparation API example; use an SDK for complete contract validation.
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 const apiKey = process.env.RAYON_API_KEY
@@ -203,7 +203,7 @@ console.log('Generated request:', result.request_id)
 [Source](https://github.com/Rayon-API/docs/blob/main/examples/rest.go).
 
 ```go
-// Coordinated preparation API preview; use an SDK for complete contract validation.
+// Preparation API example; use an SDK for complete contract validation.
 package main
 
 import (

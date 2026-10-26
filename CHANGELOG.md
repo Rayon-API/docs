@@ -1,11 +1,11 @@
 # Changelog
 
 
-## Coordinated preparation preview
+## Material preparation
 
 - Document explicit startup prepare/wait before workloads across Python/JS/Go v2 and Playwright 1.
 - Explain complete-output readiness, safe metadata, status resumption and independent readiness/source expiry.
-- Keep the 30-day migration and mandatory Rust-only cutover planned until announced backend rollout/readiness gates.
+- Keep mandatory preparation disabled; announce the 30-day migration and cutoff separately after readiness gates.
 - Update optional config workflow and REST continuations without changing ShapeRequest or generation output frames.
 
 ## 2026-10-20

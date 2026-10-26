@@ -1,8 +1,8 @@
 # Go SDK
 
 Follow the [Quickstart](./quickstart.md) with your existing target HTTP client.
-Requires Go 1.23+. Preparation is a coordinated backend release preview; confirm endpoint availability.
-Install the v2.0.0 module after its coordinated release:
+Requires Go 1.23+. The preparation API is available.
+Install the v2.0.0 module:
 
 ```sh
 go get github.com/Rayon-API/rayon-sdk-go/v2@v2.0.0

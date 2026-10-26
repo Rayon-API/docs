@@ -1,11 +1,10 @@
-# Material preparation (coordinated release preview)
+# Material preparation
 
-The preparation API and SDK helpers are a coordinated backend release preview.
-Do not assume these routes are deployed. The existing generation path remains
-available while the additive backend release is reviewed. A planned 30-day
-migration window begins with the announced backend rollout; no cutoff date is
-set in this preview. Mandatory preparation and Rust-only generation are gated on
-complete-output readiness. They are not active merely because an SDK is installed.
+The additive preparation API is available. Explicitly prepare and wait before
+starting a workload. Legacy generation remains available; mandatory preparation is not enabled.
+A 30-day migration window and cutoff will be announced separately; no cutoff date
+is set. Rust-only enforcement remains gated on complete-output readiness and the
+announced migration. Installing an SDK does not enable enforcement.
 
 ## Prepare at startup, then begin the workload
 
@@ -22,8 +21,8 @@ A successful source upload alone is not readiness. Only `ready` reports
 learned scripts, generated headers, form telemetry, cookies, or the source text.
 
 After the planned migration window and enforcement rollout, unprepared contexts
-must be prepared before generation; generation will not learn implicitly. During
-this preview, legacy serving behavior remains unchanged. `generate` retains its
+must be prepared before generation; generation will not learn implicitly. Until
+enforcement is announced and enabled, legacy serving behavior remains unchanged. `generate` retains its
 request signature and result frame and never calls preparation or waits for a job.
 
 ## Routes and authentication

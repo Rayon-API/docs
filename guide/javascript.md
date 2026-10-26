@@ -1,6 +1,6 @@
 # JavaScript / TypeScript SDK
 
-Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are included. Keep the SDK and API key server-side. Preparation helpers are a coordinated backend release preview; confirm availability before using them.
+Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are included. Keep the SDK and API key server-side. The preparation API is available; use the explicit helpers before workload startup.
 
 ## 1. Install
 

@@ -116,7 +116,7 @@ For observed URL-encoded form telemetry, follow [Form payload integration](../fo
 
 ## 5. Keep source reuse separate from readiness
 
-In the coordinated preparation release preview, a valid `material_ref` reuses
+A valid `material_ref` reuses
 source bytes but does not prove that a full request/session context is ready.
 Explicitly prepare and wait before starting a workload; partial material/output
 fails preparation. `ready_until` bounds readiness separately from

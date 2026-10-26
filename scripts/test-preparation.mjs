@@ -15,7 +15,7 @@ for(const [path,prepare,generate,version] of [
  const block=text.match(/```(?:python|javascript|go)\n([\s\S]*?)\n```/)?.[1];
  assert.ok(block?.includes(prepare));
  assert.ok(block.indexOf(prepare)<block.indexOf(generate));
- assert.match(text,/coordinated|preview/i);
+ assert.match(text,/preparation API is available/i);
 });
 test('preparation reference distinguishes full readiness, expiry, cancellation and planned migration',()=>{
  const text=read('reference/preparation.md');
@@ -23,7 +23,10 @@ test('preparation reference distinguishes full readiness, expiry, cancellation a
  assert.match(text,/complete.*output/i);
  assert.match(text,/partial.*(?:fail|ready)|(?:fail|ready).*partial/i);
  assert.match(text,/cancel.*wait.*(?:continues|running)|wait.*cancel.*(?:continues|running)/i);
- assert.match(text,/planned/i);
+ assert.match(text,/preparation API is available/i);
+ assert.match(text,/mandatory preparation.*not enabled/i);
+ assert.match(text,/30-day.*announced separately/i);
+ assert.match(text,/no cutoff date/i);
 });
 
 import { spawnSync } from 'node:child_process';

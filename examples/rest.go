@@ -1,4 +1,4 @@
-// Coordinated preparation API preview; use an SDK for complete contract validation.
+// Preparation API example; use an SDK for complete contract validation.
 package main
 
 import (

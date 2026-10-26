@@ -1,4 +1,4 @@
-"""Preparation preview: continue after collection in the same process/session."""
+"""Preparation example: continue after collection in the same process/session."""
 import json
 import os
 import random

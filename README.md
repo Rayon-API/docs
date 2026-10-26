@@ -19,8 +19,10 @@ The Markdown repository and styled site are separate publishing surfaces. For AP
 Publish the styled site through its existing canonical-source and owner-mirror workflow; a passing build in this repository does not publish `docs.rayonapi.com`. Verify the production alias, affected live pages and downloaded schema before reporting that documentation is synced. Historical benchmarks remain dated observations, not current capacity guarantees.
 
 
-Preparation-first documentation is a coordinated backend release preview. The
-30-day migration has no fixed cutoff until the backend rollout is announced.
+The additive preparation API is available. Mandatory preparation is not enabled;
+a 30-day migration window and cutoff will be announced separately. No cutoff date
+is set. Publish release-branch documentation only after recorded backend and
+public-ingress activation.
 The canonical OpenAPI must match the backend schema exactly before publication.
 Run `npm test` to check preparation flow, public assets, embedded examples, links,
 code syntax, and the VitePress build. Keep `generate` signatures and result frames

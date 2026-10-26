@@ -70,7 +70,7 @@ After a client/network timeout or a response with `billing_status: pending` or `
 In **Dashboard → Request history**, select a domain and open **Details**. The panel shows the request ID, recorded HTTP status, timing and a safe explanation/action. **Not charged** confirms no allowance or wallet funds were consumed. **Processing billing** refreshes while the final record updates. For **Billing status unavailable**, refresh or contact support with the ID. Successful usage is identified as allowance or wallet usage. A generated header set does not prove acceptance by the target.
 
 
-## Preparation errors (coordinated release preview)
+## Preparation errors
 
 Preparation routes have their own lifecycle. HTTP 404 deliberately covers both
 unknown and cross-key preparation IDs. Poll an existing queued/learning/validating/
@@ -84,8 +84,8 @@ The coordinated error catalog adds `material_not_prepared`,
 `preparation_expired`, `preparation_unauthorized`, `preparation_timeout`, and
 `preparation_interrupted`, `material_learning`, and `idempotency_conflict`.
 An idempotency conflict means a key was reused with different input; do not
-change the full request when deliberately retrying one operation. Readiness enforcement remains planned until the backend
-rollout and migration are announced. A `material_not_prepared` or
+change the full request when deliberately retrying one operation. Mandatory readiness enforcement is not enabled. A 30-day migration
+window and cutoff will be announced separately. A `material_not_prepared` or
 `prepared_material_expired` response directs callers to explicitly prepare current
 full context; it does not authorize hidden learning or a generation retry.
 

@@ -1,8 +1,9 @@
 # Quickstart
 
-Preparation-first startup is a coordinated backend release preview. Confirm endpoint
-availability before using the new helpers. The planned 30-day migration begins with
-the announced backend rollout; enforcement is not active in this preview. See the
+The additive preparation API is available. Prepare the full current context and
+wait for ready before starting a workload. Mandatory preparation is not enabled;
+a 30-day migration window and cutoff will be announced separately. No cutoff date
+is set. See the
 [preparation contract](../reference/preparation.md).
 
 Use an SDK with your existing HTTP client or browser. The same input and application

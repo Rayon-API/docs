@@ -16,7 +16,7 @@ Use the supported [material](./material.md) and [profile](./profiles.md) fields.
 Start with the [preparation guide](./preparation-walkthrough.md).
 
 
-For the coordinated preparation preview, validate the exact full context on the
+The preparation API is available. Validate the exact full context on the
 server and wait for complete `ready` status before workload startup. Source upload
 and collection do not establish readiness, and partial outputs fail preparation.
 This adds an explicit lifecycle while keeping ShapeRequest and generation output

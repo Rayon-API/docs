@@ -83,8 +83,8 @@ allowed origins, offline validation and explicit network flags.
 
 ## 4. Prepare on the server before starting the workload
 
-Collection and local validation do not establish server readiness. In the
-coordinated release preview, explicitly prepare the full ShapeRequest and wait
+Collection and local validation do not establish server readiness. With the
+available preparation API, explicitly prepare the full ShapeRequest and wait
 for `ready` before generation. The server validates complete requested outputs;
 partial material or partial output fails preparation. Readiness belongs to the
 exact source/profile/request/cookie/mode/form context and expires independently

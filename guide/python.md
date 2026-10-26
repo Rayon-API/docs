@@ -1,7 +1,6 @@
 # Python SDK
 
-Requires Python 3.10+. Keep API keys server-side. Preparation helpers are a
-coordinated backend release preview; confirm availability before using them.
+Requires Python 3.10+. Keep API keys server-side. The preparation API is available; use the explicit helpers before workload startup.
 
 ## 1. Install
 

@@ -94,18 +94,18 @@ const wireBody = result.form_body + (applicationBody ? "&" + applicationBody : "
 // Send wireBody as the raw body through your existing target session.
 ```
 
-Form mode was introduced in SDK 1.1.0. SDK 2.0.0 adds explicit preparation in a coordinated backend release preview; confirm availability before using the new startup flow. Typed `FormShapeResult` and optional header `a0` support remain unchanged. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
+Form mode was introduced in SDK 1.1.0. SDK 2.0.0 adds explicit preparation through the available additive API. Typed `FormShapeResult` and optional header `a0` support remain unchanged. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
 
 Do not URL-encode `form_body` again or pass the combined body to a form serializer. A serializer may turn `%` into `%25`, collapse duplicate keys or change application encoding. If you need to rebuild a form, iterate `form_fields` with `.items()` or `Object.entries` in returned order, append the application's ordered pairs, and serialize that entire list **once**, without also adding `form_body`. Never merge pairs into a dictionary/object.
 
 ## Use direct REST
 
-The form generation request/response remains on `POST https://api.rayonapi.com/v1/shape`. The following coordinated preparation preview explicitly prepares and waits for complete readiness, calls generation, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
+The form generation request/response remains on `POST https://api.rayonapi.com/v1/shape`. The following preparation flow explicitly prepares and waits for complete readiness, calls generation, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
 
 Save current source-page `document.cookie` in `document-cookie.txt` without a trailing newline. Save observed required target headers as `application-headers.json`; keep authentication/CSRF when required, and exclude the RayonAPI key. Replace the generic endpoint, origin allowlist and form selectors with the approved values you observed. Include clicked-submit data in `request-body.txt` and remove only stale telemetry before this call.
 
 ```python
-"""Preparation preview: continue after collection in the same process/session."""
+"""Preparation example: continue after collection in the same process/session."""
 import json
 import os
 import random
@@ -270,6 +270,6 @@ original application body, current profile/source-document cookies, and form
 identity. Partial material or partial form output fails preparation. `ready`
 confirms complete requested output validation/publication and the `rust` backend;
 it is metadata, not a set of old form fields to replay. Reprepare after readiness
-expiry or relevant context changes. The [planned 30-day migration](./reference/preparation.md)
-is gated on the announced backend rollout; mandatory enforcement is not active in
-this preview. `generate` never prepares or waits implicitly.
+expiry or relevant context changes. A [30-day migration window and cutoff](./reference/preparation.md)
+will be announced separately; mandatory enforcement is not enabled and no cutoff
+date is set. `generate` never prepares or waits implicitly.

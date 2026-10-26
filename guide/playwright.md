@@ -3,8 +3,7 @@
 Use this optional server-side adapter when you already own a Playwright `Page`.
 It wraps the JavaScript SDK and keeps your browser, context, proxy and session under
 your control. Requires Node.js 20.18.1+ and your existing Playwright setup.
-Preparation helpers are a coordinated backend release preview; confirm endpoint
-availability. Install the 1.0.0 adapter after its coordinated release:
+The preparation API is available. Install the 1.0.0 adapter:
 
 ```sh
 npm install rayon-sdk-playwright@^1.0.0 playwright-core

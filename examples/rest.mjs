@@ -1,4 +1,4 @@
-// Coordinated preparation API preview; use an SDK for complete contract validation.
+// Preparation API example; use an SDK for complete contract validation.
 import { readFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 const apiKey = process.env.RAYON_API_KEY

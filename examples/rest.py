@@ -1,4 +1,4 @@
-"""Coordinated preparation API preview; use the SDK for complete contract validation."""
+"""Preparation API example; use the SDK for complete contract validation."""
 import json
 import os
 import random
