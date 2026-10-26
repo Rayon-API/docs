@@ -81,7 +81,7 @@ Synthetic response excerpt (values are illustrative, not usable telemetry):
 Prepend `form_body`, followed by `&` and the application body only when that body is nonempty. These snippets use `result` from generation and the exact application body you supplied:
 
 ```python
-# result: FormShapeResult from Client.generate(shape) in SDK 1.1.4.
+# result: FormShapeResult from Client.generate(shape) in SDK 2.0.0 after explicit preparation.
 wire_body = (
     result.form_body + ("&" + application_body if application_body else "")
 ).encode("utf-8")
@@ -89,28 +89,113 @@ wire_body = (
 ```
 
 ```javascript
-// result: FormShapeResult from await client.generate(shape) in SDK 1.1.4.
+// result: FormShapeResult from await client.generate(shape) in SDK 2.0.0 after explicit preparation.
 const wireBody = result.form_body + (applicationBody ? "&" + applicationBody : "");
 // Send wireBody as the raw body through your existing target session.
 ```
 
-Form mode was introduced in SDK 1.1.0; use the current SDK 1.1.4. SDK 1.1.4 is published for Python and JavaScript with typed `FormShapeResult` and optional header `a0` support. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
+Form mode was introduced in SDK 1.1.0. SDK 2.0.0 adds explicit preparation through the available additive API. Typed `FormShapeResult` and optional header `a0` support remain unchanged. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
 
 Do not URL-encode `form_body` again or pass the combined body to a form serializer. A serializer may turn `%` into `%25`, collapse duplicate keys or change application encoding. If you need to rebuild a form, iterate `form_fields` with `.items()` or `Object.entries` in returned order, append the application's ordered pairs, and serialize that entire list **once**, without also adding `form_body`. Never merge pairs into a dictionary/object.
 
 ## Use direct REST
 
-Form mode is live on `POST https://api.rayonapi.com/v1/shape` and supported by SDK 1.1.4+. The following Python example calls REST directly, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
+The form generation request/response remains on `POST https://api.rayonapi.com/v1/shape`. The following preparation flow explicitly prepares and waits for complete readiness, calls generation, then sends raw bytes through the open `target_session` from [material collection](./guide/material.md). Run the collection and this step in the same process so scripts, cookies, browser identity and sticky proxy/IP remain consistent.
 
 Save current source-page `document.cookie` in `document-cookie.txt` without a trailing newline. Save observed required target headers as `application-headers.json`; keep authentication/CSRF when required, and exclude the RayonAPI key. Replace the generic endpoint, origin allowlist and form selectors with the approved values you observed. Include clicked-submit data in `request-body.txt` and remove only stale telemetry before this call.
 
 ```python
-"""Continue after the material-collection snippet, in the same process/session."""
+"""Preparation example: continue after collection in the same process/session."""
 import json
 import os
+import random
+import re
+import time
+import uuid
+from urllib.error import HTTPError, URLError
+from urllib.request import HTTPRedirectHandler, Request, build_opener
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+class APIHTTPError(RuntimeError):
+    def __init__(self, status):
+        super().__init__(f"Rayon API HTTP {status}")
+        self.status = status
+
+api_opener = build_opener(NoRedirect)
+api_key = os.environ["RAYON_API_KEY"]
+
+def api_call(method, path, payload=None, *, idempotency_key=None, timeout=45):
+    headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+    if idempotency_key is not None:
+        headers["Idempotency-Key"] = idempotency_key
+    request = Request("https://api.rayonapi.com" + path,
+        data=None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        headers=headers, method=method)
+    try:
+        with api_opener.open(request, timeout=timeout) as response:
+            status = response.status
+            if status != 200 and not (path == "/v1/materials/prepare" and status == 202):
+                raise APIHTTPError(status)
+            raw = response.read(256 * 1024 + 1)
+            if len(raw) > 256 * 1024:
+                raise RuntimeError("Invalid API response size")
+    except HTTPError as error:
+        raise APIHTTPError(error.code) from None
+    except (URLError, TimeoutError):
+        raise RuntimeError("Rayon API transport failed") from None
+    def pairs(items):
+        result = {}
+        for name, value in items:
+            if name in result:
+                raise ValueError()
+            result[name] = value
+        return result
+    def constant(_):
+        raise ValueError()
+    try:
+        return json.loads(raw.decode("utf-8"), object_pairs_hook=pairs, parse_constant=constant)
+    except (ValueError, UnicodeError):
+        raise RuntimeError("Invalid API JSON response") from None
+
+def prepare_and_wait(shape):
+    # Exactly one POST. Reuse this key if implementing a deliberate POST retry.
+    job = api_call("POST", "/v1/materials/prepare", shape, idempotency_key=uuid.uuid4().hex)
+    ident = job.get("preparation_id") if isinstance(job, dict) else None
+    if not isinstance(ident, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", ident) or api_key in ident:
+        raise RuntimeError("Invalid preparation ID")
+    deadline = time.monotonic() + 60
+    while True:
+        if job.get("preparation_id") != ident or job.get("status_url") != "/v1/materials/preparations/" + ident:
+            raise RuntimeError("Invalid preparation response")
+        state = job.get("state")
+        if state == "ready":
+            ref = job.get("material_ref")
+            if (job.get("execution_backend") != "rust" or not job.get("ready_until")
+                    or not isinstance(ref, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", ref) or api_key in ref):
+                raise RuntimeError("Invalid readiness metadata")
+            return job
+        if state in ("failed", "expired"):
+            raise RuntimeError("Preparation " + state + "; preparation ID: " + ident)
+        if state not in ("queued", "learning", "validating", "publishing"):
+            raise RuntimeError("Invalid preparation state")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError("Preparation wait timed out; resume preparation ID: " + ident)
+        try:
+            job = api_call("GET", "/v1/materials/preparations/" + ident + "?wait=" + str(min(10, int(remaining))),
+                timeout=remaining)
+        except APIHTTPError as error:
+            if error.status not in (408, 429, 500, 502, 503, 504):
+                raise
+            time.sleep(min(random.uniform(.05, .15), max(0, deadline - time.monotonic())))
+            continue
+        time.sleep(min(.01, max(0, deadline - time.monotonic())))
+
 from pathlib import Path
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
 
 # target_session, source_url, scripts and profile come from material collection.
 request_url = "https://shop.example.com/account"  # Your exact observed action URL.
@@ -139,16 +224,10 @@ shape = {
         "body": application_body,  # Application fields before fresh telemetry.
     },
 }
-api_request = Request(
-    "https://api.rayonapi.com/v1/shape",
-    data=json.dumps(shape, ensure_ascii=False).encode("utf-8"),
-    headers={"Authorization": "Bearer " + os.environ["RAYON_API_KEY"],
-             "Content-Type": "application/json"},
-    method="POST",
-)
-# This is a separate REST API client, not the target's cookie/proxy session.
-with urlopen(api_request, timeout=45) as api_response:
-    result = json.load(api_response)
+ready = prepare_and_wait(shape)
+generation_shape = {name: value for name, value in shape.items() if name != "scripts"}
+generation_shape["material_ref"] = ready["material_ref"]
+result = api_call("POST", "/v1/shape", generation_shape)
 wire_body = (
     result["form_body"] + ("&" + application_body if application_body else "")
 ).encode("utf-8")
@@ -182,3 +261,15 @@ Send the composed bytes to the exact approved endpoint using POST and `Content-T
 Generate fresh telemetry for each application request. A material reference reuses script source, not tokens or form state; supply current profile, cookies, application body and form identity each time. After `material_expired`, upload your retained scripts again.
 
 Check the target response body as well as its HTTP status. Generation success does not establish target acceptance. Compare the final raw body and Form Data with the observed request when diagnosing a challenge. See [troubleshooting](./guide/troubleshooting.md).
+
+
+## Explicit form readiness
+
+Prepare the full form ShapeRequest before workload startup, including the exact
+original application body, current profile/source-document cookies, and form
+identity. Partial material or partial form output fails preparation. `ready`
+confirms complete requested output validation/publication and the `rust` backend;
+it is metadata, not a set of old form fields to replay. Reprepare after readiness
+expiry or relevant context changes. A [30-day migration window and cutoff](./reference/preparation.md)
+will be announced separately; mandatory enforcement is not enabled and no cutoff
+date is set. `generate` never prepares or waits implicitly.

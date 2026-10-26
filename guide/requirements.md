@@ -14,3 +14,10 @@ Ordinary HTTPS is sufficient for SDK calls to RayonAPI. The SDK accepts prepared
 Use the supported [material](./material.md) and [profile](./profiles.md) fields. Unknown fields are rejected; native Android/iOS protection protocols are outside the web Shape contract.
 
 Start with the [preparation guide](./preparation-walkthrough.md).
+
+
+The preparation API is available. Validate the exact full context on the
+server and wait for complete `ready` status before workload startup. Source upload
+and collection do not establish readiness, and partial outputs fail preparation.
+This adds an explicit lifecycle while keeping ShapeRequest and generation output
+unchanged. See [the planned rollout and migration](../reference/preparation.md).

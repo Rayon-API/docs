@@ -1,5 +1,13 @@
 # POST /v1/shape
 
+
+The existing ShapeRequest and generation result frames remain unchanged. The
+available [preparation API](./preparation.md) adds explicit startup prepare/wait
+before a workload. It does not add partial generation success or make `generate`
+prepare implicitly. Mandatory preparation is not enabled; a 30-day migration
+window and cutoff will be announced separately. Legacy generation remains available
+until enforcement is announced and enabled after complete-output readiness gates.
+
 Generate one fresh Shape telemetry family from client-supplied JavaScript. Header mode is the default; [form mode](../form-payload-integration.md) returns body fields.
 
 | Setting | Value |

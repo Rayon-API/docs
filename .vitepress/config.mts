@@ -46,6 +46,7 @@ export default defineConfig({
         { text: 'Troubleshooting', link: '/guide/troubleshooting' }
       ] },
       { text: 'Reference', items: [
+        { text: 'Material preparation', link: '/reference/preparation' },
         { text: 'POST /v1/shape', link: '/reference/shape' },
         { text: 'Errors and limits', link: '/reference/errors' },
         { text: 'GET /v1/usage', link: '/reference/usage' }

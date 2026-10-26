@@ -41,7 +41,7 @@ test('synthetic response contains a complete ordered form family and exact seria
 
 test('public schema separates form output and applies conditional input types', () => {
   const schema = JSON.parse(readFileSync(new URL('../public/schema/shape-v1.openapi.json', import.meta.url), 'utf8'));
-  assert.deepEqual(Object.keys(schema.paths).sort(), ['/v1/shape', '/v1/usage']);
+  assert.deepEqual(Object.keys(schema.paths).sort(), ['/v1/materials/preparations/{preparation_id}', '/v1/materials/prepare', '/v1/shape', '/v1/usage'].sort());
   const definitions = schema.components.schemas;
   assert.equal(definitions.ShapeRequest.properties.mode.default, 'header');
   assert.deepEqual(definitions.ShapeRequest.properties.mode.enum, ['header', 'form']);
@@ -73,10 +73,14 @@ os.environ['RAYON_API_KEY'] = 'offline-api-key'
 body='item=first&item=second&empty=&csrf=a%2Bb&submit=continue&name=caf%C3%A9'
 telemetry='site-fielda=a%2Bb&site-fieldb=b&site-fieldc=c&site-fieldd=&site-fieldf=f&site-fieldz=z'
 api_calls=[]
-def api_send(request, timeout):
+class APIResponse(io.BytesIO):
+    status=200
+def api_send(self, request, timeout):
     api_calls.append(request)
-    return io.BytesIO(json.dumps(dict(form_body=telemetry, profile_used={'user_agent':'fixture-UA'}, request_id='fixture')).encode())
-urllib.request.urlopen=api_send
+    if request.full_url.endswith('/v1/materials/prepare'):
+        return APIResponse(json.dumps(dict(preparation_id='0123456789abcdef0123456789abcdef', state='ready', status_url='/v1/materials/preparations/0123456789abcdef0123456789abcdef', material_ref='ref_0123456789abcdef', ready_until='2030-01-01T00:00:00Z', execution_backend='rust')).encode())
+    return APIResponse(json.dumps(dict(form_body=telemetry, profile_used={'user_agent':'fixture-UA'}, request_id='fixture')).encode())
+urllib.request.OpenerDirector.open=api_send
 class TargetSession:
     def __init__(self): self.calls=[]; self.cookies={'session':'client-only'}
     def request(self, *args, **kwargs):
@@ -96,7 +100,10 @@ with tempfile.TemporaryDirectory() as directory:
     assert generated['request']['body']==body
     assert generated['document_cookie']=='visible=current'
     assert 'session' not in generated['document_cookie']
-    assert api_calls[0].full_url=='https://api.rayonapi.com/v1/shape'
+    assert api_calls[0].full_url=='https://api.rayonapi.com/v1/materials/prepare'
+    assert api_calls[0].get_header('Idempotency-key')
+    assert api_calls[1].full_url=='https://api.rayonapi.com/v1/shape'
+    assert 'scripts' not in json.loads(api_calls[1].data)
     assert api_calls[0].get_header('Authorization')=='Bearer offline-api-key'
     args, options=session.calls[0]
     assert args==('POST','https://shop.example.com/account')

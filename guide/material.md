@@ -92,7 +92,7 @@ API key and original source URL, last up to five minutes and can expire earlier 
 eviction or restart. Use `material_expires_at`; uploading identical material need not
 extend its expiry. Each generation still uses current profile, request and cookie inputs.
 
-Python and JavaScript SDK 1.1.4 clients retain original source in memory (up to 128
+Python and JavaScript SDK 2.0.0 clients retain original source in memory (up to 128
 bundles and 16 MiB per client). Identical ordered sources reuse a reference in header
 and form modes. Within five seconds of expiry, the next call uploads retained sources
 again; concurrent callers share the upload and then generate their own results. There
@@ -112,3 +112,15 @@ retry guidance.
 Source limits: 16 scripts, 2 MiB each, 3 MiB total. See [all limits](../reference/shape.md#input-limits).
 
 For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; form mode is supported by the SDKs.
+
+
+## 5. Keep source reuse separate from readiness
+
+A valid `material_ref` reuses
+source bytes but does not prove that a full request/session context is ready.
+Explicitly prepare and wait before starting a workload; partial material/output
+fails preparation. `ready_until` bounds readiness separately from
+`material_expires_at`. Reprepare current full context after expiry or relevant
+source/profile/request/cookie/mode/form changes. Source-only generation caching
+and coalesced uploads do not coalesce preparation across different contexts.
+See [preparation states, lifetimes and planned migration](../reference/preparation.md).
