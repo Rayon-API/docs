@@ -1,5 +1,13 @@
 # POST /v1/shape
 
+
+The existing ShapeRequest and generation result frames remain unchanged. The
+coordinated [preparation preview](./preparation.md) adds explicit startup prepare/
+wait before a workload. It does not add partial generation success or make
+`generate` prepare implicitly. The planned 30-day migration and Rust-only
+cutover begin only after the announced rollout and complete-output readiness gate;
+legacy serving remains unchanged in this preview.
+
 Generate one fresh Shape telemetry family from client-supplied JavaScript. Header mode is the default; [form mode](../form-payload-integration.md) returns body fields.
 
 | Setting | Value |

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rayon API",
-    "version": "1.1.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque."
+    "version": "2.0.0",
+    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque. Explicit material preparation is an additive migration capability; the announced mandatory cutover changes cold-generation behaviour. Existing generation JSON fields remain supported. Preparation/status are uncharged and separately bounded; only currently ready qualified material is eligible for Rust-only generation after cutover."
   },
   "servers": [
     {
@@ -275,6 +275,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "After prepared-only enforcement: material_not_prepared, material_learning or prepared_material_expired; no successful generation charge. Prepare or resume waiting explicitly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -376,6 +386,249 @@
                 }
               }
             },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/materials/prepare": {
+      "post": {
+        "summary": "Prepare supplied material for subsequent Rust generation",
+        "description": "Call during startup, then explicitly wait for ready before submitting the critical generation workload. Eligible work is queued while preparation capacity is occupied. URLs are context and are never fetched. Initially additive during the announced migration; generation becomes prepared-only at the separately announced cutover. This POST does not wait for learning. Input Content-Encoding must be identity.",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._:-]+$"
+            },
+            "description": "Use the same key and identical input only when retrying this preparation operation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShapeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current preparation status; no generation credit is spent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preparation"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Current preparation status; no generation credit is spent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preparation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/materials/preparations/{preparation_id}": {
+      "get": {
+        "summary": "Get or explicitly wait for material preparation status",
+        "description": "Authenticated and key-isolated. Client timeout or cancellation detaches only that waiter, leaving the shared operation active. Status reads never restart learning. Preparation/status spend no generation credits.",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "preparation_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            }
+          },
+          {
+            "in": "query",
+            "name": "wait",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "default": 0
+            },
+            "description": "Optional bounded long poll until ready/terminal state, returning a snapshot at the wait deadline."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current preparation status; no generation credit is spent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preparation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Standard actionable uncharged API error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Standard actionable uncharged API error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1321,6 +1574,112 @@
           }
         },
         "title": "FormShapeResponse"
+      },
+      "Preparation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "preparation_id",
+          "state",
+          "status_url",
+          "retry_after_ms",
+          "preparation_expires_at",
+          "material_ref",
+          "material_expires_at",
+          "ready_until",
+          "execution_backend",
+          "error"
+        ],
+        "properties": {
+          "preparation_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "learning",
+              "validating",
+              "publishing",
+              "ready",
+              "failed",
+              "expired"
+            ]
+          },
+          "status_url": {
+            "type": "string",
+            "pattern": "^/v1/materials/preparations/[a-f0-9]{32}$"
+          },
+          "retry_after_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60000
+          },
+          "preparation_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "material_ref": {
+            "type": "string",
+            "description": "Existing key-scoped source reference; alone it does not establish Rust readiness."
+          },
+          "material_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ready_until": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution_backend": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "rust",
+              null
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[a-z_]{1,64}$"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "retryable": {
+                    "type": "boolean"
+                  },
+                  "action": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "Explicit asynchronous preparation. Ready means qualified complete output and acknowledged live Rust publication for the supported context. Lost eligibility invalidates readiness. Waiting never starts generation or spends generation credits."
       }
     }
   }

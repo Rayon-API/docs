@@ -1,5 +1,13 @@
 # Changelog
 
+
+## Coordinated preparation preview
+
+- Document explicit startup prepare/wait before workloads across Python/JS/Go v2 and Playwright 1.
+- Explain complete-output readiness, safe metadata, status resumption and independent readiness/source expiry.
+- Keep the 30-day migration and mandatory Rust-only cutover planned until announced backend rollout/readiness gates.
+- Update optional config workflow and REST continuations without changing ShapeRequest or generation output frames.
+
 ## 2026-10-20
 
 - Document SDK 1.1.4 material recovery, coalescing, retained-source bounds and overall deadlines.

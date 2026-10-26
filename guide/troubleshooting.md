@@ -22,3 +22,19 @@ Domain approval covers a root domain and its `www` alias. Other subdomains need 
 The SDK's default total timeout is 45 seconds in version 1.0.1+. It includes upload and network time. In SDK 1.1.4+, this budget also covers coalesced material waits and the single confirmed-unbilled material recovery attempt. Other generation failures are never automatically retried; each explicit retry is a new attempt.
 
 For support, share `request_id`, sanitized error code and redacted diagnostics. Keep keys, raw scripts, generated headers, cookies and private request bodies out of public reports. See [API errors](../reference/errors.md).
+
+
+## Preparation startup (coordinated preview)
+
+Do not start the workload while a preparation is queued, learning, validating or
+publishing. Resume status/wait by the safe preparation ID after a timeout or
+interrupted wait; cancellation leaves the server job running. Failed preparation
+is not partial success: confirm complete ordered sources and exact current full
+context, then explicitly prepare again. If complete material still fails, share
+the preparation/request ID and safe code with support.
+
+Readiness can expire before a source reference. `material_not_prepared` and
+`prepared_material_expired` require explicit preparation once enforcement is
+rolled out. Do not replay generated headers or retry generation merely because
+preparation expired. The planned 30-day migration has no cutoff date in this
+preview; see [current rollout status](../reference/preparation.md).

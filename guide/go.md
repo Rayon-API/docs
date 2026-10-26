@@ -1,15 +1,16 @@
 # Go SDK
 
 Follow the [Quickstart](./quickstart.md) with your existing target HTTP client.
-Requires Go 1.23+. Install the published v1.0.0 module:
+Requires Go 1.23+. Preparation is a coordinated backend release preview; confirm endpoint availability.
+Install the v2.0.0 module after its coordinated release:
 
 ```sh
-go get github.com/Rayon-API/rayon-sdk-go@v1.0.0
+go get github.com/Rayon-API/rayon-sdk-go/v2@v2.0.0
 ```
 
 [Source and releases](https://github.com/Rayon-API/rayon-sdk-go).
 
-## Check usage, generate and apply
+## Check usage, prepare, wait, generate and apply
 
 Prepare `shape.json` using the shared [input guide](./preparation-walkthrough.md).
 Keep `RAYON_API_KEY` server-side.
@@ -23,7 +24,7 @@ import (
     "log"
     "os"
 
-    rayon "github.com/Rayon-API/rayon-sdk-go"
+    rayon "github.com/Rayon-API/rayon-sdk-go/v2"
 )
 
 func main() {
@@ -38,6 +39,10 @@ func main() {
     if err != nil { log.Fatal(err) }
     var shape rayon.ShapeRequest
     if err := json.Unmarshal(data, &shape); err != nil { log.Fatal(err) }
+    ready, err := client.PrepareAndWait(ctx, shape)
+    if err != nil { log.Fatal(err) }
+    shape.Scripts = nil
+    shape.MaterialRef = ready.MaterialRef
     result, err := client.Generate(ctx, shape)
     if err != nil { log.Fatal(err) }
     log.Print(result.RequestID)
@@ -59,3 +64,17 @@ The SDK does not collect scripts or send target requests. See the
 [errors](../reference/errors.md) before resubmitting an uncertain generation.
 
 [Python](./python.md) · [JavaScript / TypeScript](./javascript.md) · [Go](./go.md) · [Playwright](./playwright.md)
+
+## Explicit preparation and resumption
+
+`Prepare(ctx, shape)` starts one job. `GetPreparation(ctx, id)` reads status.
+`WaitUntilReady(ctx, id)` waits for at most 60 seconds or the context's earlier
+deadline. `PrepareAndWait` combines the explicit steps. A successful wait returns
+`ReadyMaterial` safe metadata with complete readiness and the `rust` backend.
+`*rayon.Error.PreparationID` preserves the safe ID after polling failure, timeout
+or cancellation. Terminal kinds are `preparation_failed` and
+`preparation_expired`. Cancelling the context stops the wait while the server job
+continues. `Generate` never prepares or waits implicitly.
+
+Reprepare when readiness expires or the full source/profile/request/cookie/mode/
+form context changes. See [states, lifetimes and planned migration](../reference/preparation.md).

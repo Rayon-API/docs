@@ -68,3 +68,29 @@ After a client/network timeout or a response with `billing_status: pending` or `
 `billing_status: not_charged` means no allowance or wallet funds were used. `pending` means the billing record is still updating; it does not confirm a charge. `unknown` or an absent field means billing could not be confirmed. Failed generations are not billable; usage checks are free.
 
 In **Dashboard → Request history**, select a domain and open **Details**. The panel shows the request ID, recorded HTTP status, timing and a safe explanation/action. **Not charged** confirms no allowance or wallet funds were consumed. **Processing billing** refreshes while the final record updates. For **Billing status unavailable**, refresh or contact support with the ID. Successful usage is identified as allowance or wallet usage. A generated header set does not prove acceptance by the target.
+
+
+## Preparation errors (coordinated release preview)
+
+Preparation routes have their own lifecycle. HTTP 404 deliberately covers both
+unknown and cross-key preparation IDs. Poll an existing queued/learning/validating/
+publishing job rather than creating another job whenever a wait ends. Timeout or
+cancellation of a client wait does not cancel the server job. A terminal failed or
+expired status includes sanitized structured metadata and requires an explicit
+corrected/current preparation before workload startup.
+
+The coordinated error catalog adds `material_not_prepared`,
+`prepared_material_expired`, `preparation_unavailable`, `preparation_failed`,
+`preparation_expired`, `preparation_unauthorized`, `preparation_timeout`, and
+`preparation_interrupted`, `material_learning`, and `idempotency_conflict`.
+An idempotency conflict means a key was reused with different input; do not
+change the full request when deliberately retrying one operation. Readiness enforcement remains planned until the backend
+rollout and migration are announced. A `material_not_prepared` or
+`prepared_material_expired` response directs callers to explicitly prepare current
+full context; it does not authorize hidden learning or a generation retry.
+
+Preparation POSTs use one stable `Idempotency-Key` per invocation. SDKs do not
+retry ambiguous prepare POSTs. Bounded wait helpers retry only transient GETs
+with jitter and expose a safe preparation ID for resumption. `generate` keeps
+its existing billing/retry behavior; readiness metadata contains no old telemetry
+to replay. See the [preparation contract](./preparation.md).

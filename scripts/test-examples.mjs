@@ -106,9 +106,9 @@ with tempfile.TemporaryDirectory() as directory:
   assert.equal(result.status, 0, result.stderr);
 });
 
-test('public schema contains only current generation and usage routes and the USD wallet contract', () => {
+test('public schema contains preparation, generation and usage routes and the USD wallet contract', () => {
   const schema = JSON.parse(readFileSync(`${root}public/schema/shape-v1.openapi.json`, 'utf8'));
-  assert.deepEqual(Object.keys(schema.paths).sort(), ['/v1/shape', '/v1/usage']);
+  assert.deepEqual(Object.keys(schema.paths).sort(), ['/v1/materials/preparations/{preparation_id}', '/v1/materials/prepare', '/v1/shape', '/v1/usage'].sort());
   const allowance = schema.components.schemas.UsageResponse.properties.allowance;
   assert.ok(allowance.required.includes('wallet'));
   assert.ok(allowance.required.includes('payg_rate_per_1000_usd'));

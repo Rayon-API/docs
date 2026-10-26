@@ -1,8 +1,8 @@
-# Prepare your first request
+# Collect inputs and prepare your first request
 
 Prepare these inputs in your existing integration, then pass them to an SDK. Use browser capture or downloads only for inputs your flow still needs. The SDK and API do not discover or download scripts.
 
-## Prepared SDK inputs
+## Collected SDK inputs
 
 ### 1. Prepare the script sources and request
 
@@ -71,7 +71,7 @@ Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="u
 
 When needed, add `document_cookie` with current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. Keep cookies and material current for flows that bind them to a session.
 
-Continue with the [SDK quickstart](./quickstart.md#5-generate-and-apply). Reuse the SDK client across generations, update the request and other changing inputs each time, and apply the result using your target integration. Preserve the exact body string: whitespace, key order and Unicode bytes matter. For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md); both SDKs and direct REST support it.
+Continue with the [SDK quickstart](./quickstart.md#5-prepare-wait-then-generate-and-apply). Reuse the SDK client across generations, update the request and other changing inputs each time, and apply the result using your target integration. Preserve the exact body string: whitespace, key order and Unicode bytes matter. For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md); both SDKs and direct REST support it.
 
 ## Optional Python download helper
 
@@ -80,3 +80,13 @@ when you want explicitly selected script downloads and optional target sending t
 one `curl_cffi` session. It is optional; keep your current integration when it already
 provides these inputs. The workflow reference covers config, cookie scope, form mode,
 allowed origins, offline validation and explicit network flags.
+
+## 4. Prepare on the server before starting the workload
+
+Collection and local validation do not establish server readiness. In the
+coordinated release preview, explicitly prepare the full ShapeRequest and wait
+for `ready` before generation. The server validates complete requested outputs;
+partial material or partial output fails preparation. Readiness belongs to the
+exact source/profile/request/cookie/mode/form context and expires independently
+of a source reference. Follow the [quickstart](./quickstart.md) and
+[preparation contract](../reference/preparation.md) for methods and migration status.
