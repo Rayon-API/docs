@@ -10,7 +10,7 @@ npm test
 npm run dev
 ```
 
-Read [quickstart](./guide/quickstart.md), [material collection](./guide/preparation-walkthrough.md), [request fields](./reference/shape.md) and [usage](./reference/usage.md). [Security reports](SECURITY.md). All target examples use reserved domains; no proprietary protection source or live target fixtures are included.
+Read [quickstart](./guide/quickstart.md), [request inputs](./guide/preparation-walkthrough.md), [request fields](./reference/shape.md) and [usage](./reference/usage.md). [Security reports](SECURITY.md). All target examples use reserved domains; no proprietary protection source or live target fixtures are included.
 
 ## Keeping published guidance aligned
 
@@ -19,11 +19,7 @@ The Markdown repository and styled site are separate publishing surfaces. For AP
 Publish the styled site through its existing canonical-source and owner-mirror workflow; a passing build in this repository does not publish `docs.rayonapi.com`. Verify the production alias, affected live pages and downloaded schema before reporting that documentation is synced. Historical benchmarks remain dated observations, not current capacity guarantees.
 
 
-The additive preparation API is available. Mandatory preparation is not enabled;
-a 30-day migration window and cutoff will be announced separately. No cutoff date
-is set. Publish release-branch documentation only after recorded backend and
-public-ingress activation.
-The canonical OpenAPI must match the backend schema exactly before publication.
-Run `npm test` to check preparation flow, public assets, embedded examples, links,
-code syntax, and the VitePress build. Keep `generate` signatures and result frames
-unchanged, and do not advertise partial material/output as ready.
+Managed generation is the default for supported public header flows. Optional
+explicit material, preparation and form-mode guidance must remain accurate.
+Publish only after the coordinated SDK releases and owner review. `npm test`
+checks schemas, examples, links, syntax and the site build.

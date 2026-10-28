@@ -1,14 +1,10 @@
 # POST /v1/shape
 
 
-The existing ShapeRequest and generation result frames remain unchanged. The
-available [preparation API](./preparation.md) adds explicit startup prepare/wait
-before a workload. It does not add partial generation success or make `generate`
-prepare implicitly. Mandatory preparation is not enabled; a 30-day migration
-window and cutoff will be announced separately. Legacy generation remains available
-until enforcement is announced and enabled after complete-output readiness gates.
-
-Generate one fresh Shape telemetry family from client-supplied JavaScript. Header mode is the default; [form mode](../form-payload-integration.md) returns body fields.
+Generate fresh telemetry for one exact request. Omit material for supported public
+header flows; Rayon selects current material. Explicit uploads and references
+remain optional overrides. [Preparation](./preparation.md) is optional for those
+explicit inputs. [Form mode](../form-payload-integration.md) needs explicit material.
 
 | Setting | Value |
 | --- | --- |
@@ -24,9 +20,9 @@ Generate one fresh Shape telemetry family from client-supplied JavaScript. Heade
 | --- | --- |
 | `mode` | Optional `header` (default) or `form`. |
 | `form` | Optional form-mode-only object with `id`/`name` strings, at most 256 characters each; no controls. |
-| `source_url` | Page where the protection executes. Context only; never fetched. |
-| `scripts` | Ordered nonempty `{url, source}` list. Supply this or `material_ref`, never both. |
-| `material_ref` | Earlier reference, scoped to the creating key and original source context. |
+| `source_url` | Required source-page URL. Automatic selection uses a registered HTTPS source (port 443); preserve the page path and query. |
+| `scripts` | Ordered nonempty `{url, source}` list. Optional explicit override instead of `material_ref`. Omit both for automatic header selection. |
+| `material_ref` | Optional explicit override, scoped to the creating key and original source context. |
 | `profile` | [Supported browser profile](../guide/profiles.md). |
 | `request.url` | Exact protected endpoint URL, including query parameters. |
 | `request.method` | `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`. |
@@ -36,6 +32,10 @@ Generate one fresh Shape telemetry family from client-supplied JavaScript. Heade
 
 Approve source and endpoint domains for your account. URLs cannot contain credentials, fragments, whitespace or backslashes. Unknown fields, duplicate/prototype JSON keys, nonfinite values and binary bodies are rejected. No proxy/IP field is accepted.
 
+Both material fields together, explicit nulls and empty material values are invalid.
+An unregistered automatic source returns `unsupported_material`; contact support.
+Explicit uploads and references stay private and do not enter the public registry.
+
 In form mode, the target request must be POST with `application/x-www-form-urlencoded`; `request.body` is the exact encoded application body before telemetry insertion (empty string allowed, null forbidden). One UTF-8 charset parameter is allowed. Malformed percent escapes, invalid UTF-8 and NUL are rejected. Preserve ordered duplicates and empty values; remove only stale telemetry.
 
 ## Response fields
@@ -44,12 +44,18 @@ HTTP 200 returns:
 
 | Field | Meaning |
 | --- | --- |
-| `headers` | Header mode only. Six required common-prefix suffixes `a/b/c/d/f/z` plus optional same-family `a0` freshly emitted by the uploaded scripts; `d` may be empty. Forward the entire map unchanged. |
+| `headers` | Header mode only. Six required common-prefix suffixes `a/b/c/d/f/z` plus optional same-family `a0` freshly emitted by the selected material; `d` may be empty. Forward the entire map unchanged. |
 | `request_id` | Correlation ID, also in `X-Request-ID`. |
 | `generation_ms` | Server generation time; excludes upload/network overhead. |
 | `profile_used` | Sanitized effective profile, without canvas pixels or cookies. |
-| `material_ref` | Reuse the uploaded source bundle. |
+| `material_ref` | Private reference for the resolved source bundle. Automatic callers should keep material omitted. |
 | `material_expires_at` | UTC expiry; eviction/restart may invalidate it earlier. |
+| `fallback_reason` | Optional nullable code. Non-null means a fallback was used; contact support with the request ID. |
+| `fallback_message` | Optional safe guidance about the mapping issue. |
+| `path` | Optional execution path: `native` or `isolated`. Use `fallback_reason` for fallback reporting. |
+| `material_reuse` | Optional boolean indicating source reuse. |
+| `discovery_state` | Optional nullable learning state. |
+| `discovery_duration_ms` | Optional nullable learning duration in milliseconds; can be fractional. |
 
 Form mode returns exactly six unsplit `form_fields` with suffixes `a/b/c/d/f/z` (raw names/values in observed order; no `a0`, even when `a` exceeds 7,900 characters) and `form_body` (telemetry only, encoded once), with the same metadata above and without `headers`. Preserve exact case, names and empty values; do not infer a separator from header names. [Compose it with the application body once](../form-payload-integration.md#compose-the-body-once).
 

@@ -1,5 +1,17 @@
 # Troubleshooting
 
+`material_cache_unavailable` means automatic material is warming or temporarily
+unavailable. Respect `Retry-After` and contact support with the request ID if it
+continues. You do not need to collect scripts to use the managed flow.
+
+
+For automatic public header generation, leave material omitted. If the source is
+unsupported or `fallback_reason` is non-null, contact support with the request ID.
+A fallback response may still be HTTP 200; do not infer the path from latency.
+For explicit uploads, check script order and required dependencies. Keep keys,
+cookies, bodies and source captures out of public support messages.
+
+
 | Symptom | Next step |
 | --- | --- |
 | `invalid_input` | Check required fields, exact types, profile aliases and [input limits](../reference/shape.md#input-limits). |
@@ -24,17 +36,11 @@ The SDK's default total timeout is 45 seconds in version 1.0.1+. It includes upl
 For support, share `request_id`, sanitized error code and redacted diagnostics. Keep keys, raw scripts, generated headers, cookies and private request bodies out of public reports. See [API errors](../reference/errors.md).
 
 
-## Preparation startup
+## Optional preparation
 
-Do not start the workload while a preparation is queued, learning, validating or
-publishing. Resume status/wait by the safe preparation ID after a timeout or
-interrupted wait; cancellation leaves the server job running. Failed preparation
-is not partial success: confirm complete ordered sources and exact current full
-context, then explicitly prepare again. If complete material still fails, share
-the preparation/request ID and safe code with support.
-
-Readiness can expire before a source reference. `material_not_prepared` and
-`prepared_material_expired` require explicit preparation once enforcement is
-rolled out. Do not replay generated headers or retry generation merely because
-preparation expired. A 30-day migration window and cutoff will be announced separately;
-no cutoff date is set. See [current rollout status](../reference/preparation.md).
+Preparation needs explicit material and full current context. A failed job is
+not a partial generation response. Usable validated mappings with defaults can
+be ready; required output validation and publication still apply. Keep the
+preparation ID to resume after timeout or cancellation. Cancelling a wait does
+not cancel the server job. Readiness expires separately from a source reference.
+See [states and lifetimes](../reference/preparation.md).

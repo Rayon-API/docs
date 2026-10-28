@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rayon API",
-    "version": "2.0.0",
-    "description": "Material-only generation. Context URLs never trigger network access. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque. Explicit material preparation is an additive migration capability; the announced mandatory cutover changes cold-generation behaviour. Existing generation JSON fields remain supported. Preparation/status are uncharged and separately bounded; only currently ready qualified material is eligible for Rust-only generation after cutover."
+    "version": "2.1.0",
+    "description": "Managed public header generation, with optional private material overrides. Omit scripts and material_ref to select current material from a registered HTTPS source; arbitrary URLs are not fetched on demand. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque. Preparation is optional, requires explicit material and is separately bounded and uncharged. Validated usable mappings can be ready with defaulted internal records; required generated output validation is unchanged."
   },
   "servers": [
     {
@@ -13,7 +13,7 @@
   "paths": {
     "/v1/shape": {
       "post": {
-        "summary": "Generate Shape telemetry from supplied material",
+        "summary": "Generate Shape telemetry with managed or explicit material",
         "security": [
           {
             "ApiKey": []
@@ -400,7 +400,7 @@
     "/v1/materials/prepare": {
       "post": {
         "summary": "Prepare supplied material for subsequent Rust generation",
-        "description": "Call during startup, then explicitly wait for ready before submitting the critical generation workload. Eligible work is queued while preparation capacity is occupied. URLs are context and are never fetched. Initially additive during the announced migration; generation becomes prepared-only at the separately announced cutover. This POST does not wait for learning. Input Content-Encoding must be identity.",
+        "description": "Optionally prepare explicit material and full context before a workload. Requires scripts or material_ref. Returns safe readiness metadata, never generated telemetry. Validated usable mappings with defaults may become ready; required output validation and publication still apply.",
         "security": [
           {
             "ApiKey": []
@@ -425,7 +425,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ShapeRequest"
+                "$ref": "#/components/schemas/ExplicitShapeRequest"
               }
             }
           }
@@ -1043,7 +1043,7 @@
           "source_url": {
             "title": "Source Url",
             "type": "string",
-            "description": "Context only; never fetched. Required for uploads and references; must match cached source URL."
+            "description": "Required source-page URL. Managed selection uses a registered HTTPS source on port 443. Explicit references must match their original source URL."
           },
           "scripts": {
             "items": {
@@ -1052,13 +1052,14 @@
             "maxItems": 16,
             "minItems": 1,
             "type": "array",
-            "description": "Ordered client-supplied scripts. At most 16; 2 MiB each and 3 MiB total UTF-8 source."
+            "description": "Optional explicit override: complete ordered JavaScript, 1\u201316 scripts, 2 MiB each / 3 MiB total. Supply scripts or material_ref, never both. Omit both for managed header generation."
           },
           "material_ref": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[A-Za-z0-9_-]+$",
-            "type": "string"
+            "type": "string",
+            "description": "Optional private API-key-scoped source reference. Do not pin this field in managed flows; leave both material fields omitted to select updates."
           },
           "profile": {
             "$ref": "#/components/schemas/BrowserProfile"
@@ -1113,6 +1114,30 @@
                 "scripts"
               ]
             }
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "scripts"
+                  ]
+                },
+                {
+                  "required": [
+                    "material_ref"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "mode": {
+                "const": "header"
+              },
+              "source_url": {
+                "pattern": "^https://"
+              }
+            }
           }
         ],
         "allOf": [
@@ -1155,7 +1180,8 @@
               }
             }
           }
-        ]
+        ],
+        "description": "For registered public header sources, omit both material fields. Explicit material overrides automatic selection and remains private. Form mode requires an explicit material field. Null/empty material values and both fields together are invalid."
       },
       "ShapeResponse": {
         "oneOf": [
@@ -1497,7 +1523,7 @@
               }
             },
             "additionalProperties": false,
-            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family with one optional same-family a0 header when the uploaded scripts emit it during this generation. All six core suffixes are required; suffixes and prefixes compare case-insensitively, with no duplicate suffixes. Original header names, values and case are preserved. Header names use ASCII HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty, and a0 must be nonempty. Other numbered suffixes are not accepted. Generation does not assert target acceptance."
+            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family with one optional same-family a0 header when the selected material emits it during this generation. All six core suffixes are required; suffixes and prefixes compare case-insensitively, with no duplicate suffixes. Original header names, values and case are preserved. Header names use ASCII HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty, and a0 must be nonempty. Other numbered suffixes are not accepted. Generation does not assert target acceptance."
           },
           "request_id": {
             "type": "string",
@@ -1518,6 +1544,48 @@
             "type": "string",
             "format": "date-time",
             "description": "Five-minute immutable material expiry, UTC. References are scoped to this API key."
+          },
+          "path": {
+            "type": "string",
+            "enum": [
+              "native",
+              "isolated"
+            ],
+            "description": "Optional execution path. Use fallback_reason to detect fallback, not generation time."
+          },
+          "material_reuse": {
+            "type": "boolean",
+            "description": "Whether the resolved source material was reused."
+          },
+          "discovery_duration_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 3600000,
+            "description": "Optional learning duration in milliseconds, including fractional values."
+          },
+          "discovery_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "description": "Optional learning state; current values include not_started, pending, complete, failed and restored."
+          },
+          "fallback_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "description": "Non-null means a fallback was used. Contact support with request_id about the mapping issue."
+          },
+          "fallback_message": {
+            "type": "string",
+            "maxLength": 512,
+            "description": "Optional safe guidance when a fallback is used."
           }
         },
         "title": "HeaderShapeResponse"
@@ -1571,6 +1639,48 @@
           "form_body": {
             "type": "string",
             "description": "Telemetry only, encoded once with native URLSearchParams in form_fields order. Contains no application fields. Preserve this raw string when prepending it to request.body. Must exactly serialize form_fields; at most 256 KiB UTF-8."
+          },
+          "path": {
+            "type": "string",
+            "enum": [
+              "native",
+              "isolated"
+            ],
+            "description": "Optional execution path. Use fallback_reason to detect fallback, not generation time."
+          },
+          "material_reuse": {
+            "type": "boolean",
+            "description": "Whether the resolved source material was reused."
+          },
+          "discovery_duration_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 3600000,
+            "description": "Optional learning duration in milliseconds, including fractional values."
+          },
+          "discovery_state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "description": "Optional learning state; current values include not_started, pending, complete, failed and restored."
+          },
+          "fallback_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "description": "Non-null means a fallback was used. Contact support with request_id about the mapping issue."
+          },
+          "fallback_message": {
+            "type": "string",
+            "maxLength": 512,
+            "description": "Optional safe guidance when a fallback is used."
           }
         },
         "title": "FormShapeResponse"
@@ -1679,7 +1789,129 @@
             ]
           }
         },
-        "description": "Explicit asynchronous preparation. Ready means qualified complete output and acknowledged live Rust publication for the supported context. Lost eligibility invalidates readiness. Waiting never starts generation or spends generation credits."
+        "description": "Optional asynchronous preparation of explicit material. Ready means usable validated output and acknowledged publication for the supplied context. Defaulted internal records are accepted when outputs remain valid. Lost eligibility invalidates readiness. Waiting never starts generation or spends generation credits."
+      },
+      "ExplicitShapeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "source_url": {
+            "title": "Source Url",
+            "type": "string",
+            "description": "Source page URL for the supplied material. References must match their original source URL."
+          },
+          "scripts": {
+            "items": {
+              "$ref": "#/components/schemas/Script"
+            },
+            "maxItems": 16,
+            "minItems": 1,
+            "type": "array",
+            "description": "Complete ordered JavaScript, 1\u201316 scripts, 2 MiB each / 3 MiB total. Supply scripts or material_ref, never both."
+          },
+          "material_ref": {
+            "maxLength": 128,
+            "minLength": 16,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string",
+            "description": "Private API-key-scoped source reference used instead of scripts."
+          },
+          "profile": {
+            "$ref": "#/components/schemas/BrowserProfile"
+          },
+          "request": {
+            "$ref": "#/components/schemas/RequestContext"
+          },
+          "document_cookie": {
+            "default": "",
+            "title": "Document Cookie",
+            "type": "string",
+            "description": "JavaScript-visible cookies only, at most 16 KiB; never retained in material cache."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "header",
+              "form"
+            ],
+            "default": "header",
+            "description": "Header mode (the default) returns HTTP telemetry headers. Form mode runs form instrumentation and returns body fields."
+          },
+          "form": {
+            "$ref": "#/components/schemas/FormContext",
+            "description": "Form mode only. Optional observed form ID and name; omitting this object creates the selected form without either attribute."
+          }
+        },
+        "required": [
+          "source_url",
+          "profile",
+          "request"
+        ],
+        "title": "ExplicitShapeRequest",
+        "type": "object",
+        "oneOf": [
+          {
+            "required": [
+              "scripts"
+            ],
+            "not": {
+              "required": [
+                "material_ref"
+              ]
+            }
+          },
+          {
+            "required": [
+              "material_ref"
+            ],
+            "not": {
+              "required": [
+                "scripts"
+              ]
+            }
+          }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "mode": {
+                  "const": "form"
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            },
+            "then": {
+              "properties": {
+                "request": {
+                  "properties": {
+                    "method": {
+                      "const": "POST"
+                    },
+                    "content_type": {
+                      "type": "string",
+                      "description": "application/x-www-form-urlencoded, optionally with one UTF-8 charset parameter.",
+                      "pattern": "^[aA][pP][pP][lL][iI][cC][aA][tT][iI][oO][nN]/[xX]-[wW][wW][wW]-[fF][oO][rR][mM]-[uU][rR][lL][eE][nN][cC][oO][dD][eE][dD](?:\\s*;\\s*[cC][hH][aA][rR][sS][eE][tT]\\s*=\\s*(?:\"[uU][tT][fF]-?8\"|[uU][tT][fF]-?8))?\\s*$"
+                    },
+                    "body": {
+                      "type": "string",
+                      "description": "Exact encoded application body before telemetry insertion; an empty string is permitted. At most 256 KiB UTF-8, 1,024 decoded pairs and 256 UTF-8 bytes per field name. Preserve duplicate fields, order and empty values. Malformed percent escapes, invalid UTF-8, NUL and a complete stale telemetry family are rejected."
+                    }
+                  }
+                }
+              }
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "form"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "Optional preparation input: full context with scripts or material_ref. Material omission is invalid on this route."
       }
     }
   }

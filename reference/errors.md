@@ -1,5 +1,17 @@
 # Errors and limits
 
+`material_cache_unavailable` means automatic material is warming or temporarily
+unavailable. Respect `Retry-After` and contact support with the request ID if it
+continues. You do not need to collect scripts to use the managed flow.
+
+
+For automatic public header generation, leave material omitted. If the source is
+unsupported or `fallback_reason` is non-null, contact support with the request ID.
+A fallback response may still be HTTP 200; do not infer the path from latency.
+For explicit uploads, check script order and required dependencies. Keep keys,
+cookies, bodies and source captures out of public support messages.
+
+
 Errors use a safe envelope and `X-Request-ID`:
 
 ```json
@@ -84,8 +96,7 @@ The coordinated error catalog adds `material_not_prepared`,
 `preparation_expired`, `preparation_unauthorized`, `preparation_timeout`, and
 `preparation_interrupted`, `material_learning`, and `idempotency_conflict`.
 An idempotency conflict means a key was reused with different input; do not
-change the full request when deliberately retrying one operation. Mandatory readiness enforcement is not enabled. A 30-day migration
-window and cutoff will be announced separately. A `material_not_prepared` or
+change the full request when deliberately retrying one operation. Managed public header generation does not require preparation. A `material_not_prepared` or
 `prepared_material_expired` response directs callers to explicitly prepare current
 full context; it does not authorize hidden learning or a generation retry.
 

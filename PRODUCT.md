@@ -2,11 +2,11 @@
 
 ## Audience and purpose
 
-Developers integrating Shape header generation with their own target HTTP session. Documentation should get them from a key to collected JavaScript, measured profile, exact request and applied headers.
+Developers integrating Shape header generation with their own target HTTP session. Documentation should get them from a key to source context, profile, exact request and applied headers.
 
 ## Contract
 
-Public endpoints are `POST /v1/shape` and `GET /v1/usage`. The client collects source, keeps cookies/proxy state and sends the target request. The API never downloads target URLs. Successful generation does not guarantee target acceptance.
+Public endpoints include generation, usage and optional preparation. Rayon maintains registered public material; explicit customer uploads stay private. The client keeps cookies/proxy state and sends the target request. Successful generation does not guarantee target acceptance.
 
 ## Documentation stack
 

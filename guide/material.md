@@ -1,6 +1,20 @@
-# Prepare protection material
+# Material options
 
-The SDK accepts complete script sources you already have. Downloading through a particular client is optional; use the example below when your integration needs to fetch selected URLs.
+For supported public header flows, omit both `scripts` and `material_ref`.
+Rayon selects current material from its maintained public sources. Keep them
+omitted on every call so updates are selected automatically. Start with the
+[quickstart](./quickstart.md).
+
+Registered public mappings can be reused across accounts. Uploads and references
+remain private to the API key; they are not added to the public registry.
+The source URL selects a registered source, not an arbitrary on-demand download.
+
+## Optional explicit override
+
+Supply either complete `scripts` or a valid private `material_ref` when you need
+to choose material yourself. Explicit fields override automatic selection.
+Form mode currently requires one of these inputs. Null, empty fields and both
+fields together are invalid. The collection example below is optional.
 
 ## 1. Choose the URLs
 
@@ -71,7 +85,7 @@ For flows that require session state, the target session owns the cookie jar. `m
 
 If the protection reads `document.cookie`, supply `document_cookie` containing current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. An empty string is the default. Do not flatten the full jar into this field.
 
-Use a [profile](./profiles.md) appropriate to the represented environment and exact [request fields](../reference/shape.md). RayonAPI never fetches missing scripts or network dependencies.
+Use a [profile](./profiles.md) appropriate to the represented environment and exact [request fields](../reference/shape.md). Explicit uploads must include required dependencies; they are not fetched during generation.
 
 ## 4. Reuse source with a material reference
 
@@ -87,12 +101,12 @@ next_shape = {
 }
 ```
 
-Supply exactly one of `scripts` and `material_ref`. References are scoped to the
+For an explicit override, supply exactly one of `scripts` and `material_ref`. References are scoped to the
 API key and original source URL, last up to five minutes and can expire earlier after
 eviction or restart. Use `material_expires_at`; uploading identical material need not
 extend its expiry. Each generation still uses current profile, request and cookie inputs.
 
-Python and JavaScript SDK 2.0.0 clients retain original source in memory (up to 128
+Python and JavaScript SDK 2.1.0 clients retain original source in memory (up to 128
 bundles and 16 MiB per client). Identical ordered sources reuse a reference in header
 and form modes. Within five seconds of expiry, the next call uploads retained sources
 again; concurrent callers share the upload and then generate their own results. There
@@ -116,11 +130,11 @@ For observed URL-encoded form telemetry, follow [Form payload integration](../fo
 
 ## 5. Keep source reuse separate from readiness
 
-A valid `material_ref` reuses
-source bytes but does not prove that a full request/session context is ready.
-Explicitly prepare and wait before starting a workload; partial material/output
-fails preparation. `ready_until` bounds readiness separately from
-`material_expires_at`. Reprepare current full context after expiry or relevant
-source/profile/request/cookie/mode/form changes. Source-only generation caching
-and coalesced uploads do not coalesce preparation across different contexts.
-See [preparation states, lifetimes and planned migration](../reference/preparation.md).
+A source reference is not a readiness guarantee. Optional preparation checks the
+supplied explicit context before a workload. Usable validated mappings may be
+ready with defaulted internal records; required output validation still applies.
+`ready_until` bounds readiness separately from `material_expires_at`. See the
+[preparation contract](../reference/preparation.md).
+
+Automatic generation does not need this lifecycle. Keep material omitted rather
+than copying a returned reference into later automatic requests.

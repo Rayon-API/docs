@@ -8,7 +8,7 @@ The documented six-field response applies to supported material. Sites may use o
 
 In browser DevTools, preserve the Network log and inspect **Payload → Form Data** as well as request headers. Record the endpoint, POST method, `application/x-www-form-urlencoded` content type, exact encoded application body, form ID/name when relevant, and current cookies/CSRF state. Use the raw source view to preserve encoding and order.
 
-Form field names can differ from header names. Their separator and exact case also vary: the illustrative family `site-fielda/b/c/d/f/z` has no separator before its suffix. Never derive names by rewriting a header prefix. Download the [complete ordered material](./guide/material.md) and use a [measured profile](./guide/profiles.md) from the same session.
+Form field names can differ from header names. Their separator and exact case also vary: the illustrative family `site-fielda/b/c/d/f/z` has no separator before its suffix. Never derive names by rewriting a header prefix. Supply [complete ordered material](./guide/material.md) and use a [measured profile](./guide/profiles.md) from the same session.
 
 ## Prepare material and session state
 
@@ -81,7 +81,7 @@ Synthetic response excerpt (values are illustrative, not usable telemetry):
 Prepend `form_body`, followed by `&` and the application body only when that body is nonempty. These snippets use `result` from generation and the exact application body you supplied:
 
 ```python
-# result: FormShapeResult from Client.generate(shape) in SDK 2.0.0 after explicit preparation.
+# result: FormShapeResult from Client.generate(shape) in SDK 2.1.0 after explicit preparation.
 wire_body = (
     result.form_body + ("&" + application_body if application_body else "")
 ).encode("utf-8")
@@ -89,12 +89,12 @@ wire_body = (
 ```
 
 ```javascript
-// result: FormShapeResult from await client.generate(shape) in SDK 2.0.0 after explicit preparation.
+// result: FormShapeResult from await client.generate(shape) in SDK 2.1.0 after explicit preparation.
 const wireBody = result.form_body + (applicationBody ? "&" + applicationBody : "");
 // Send wireBody as the raw body through your existing target session.
 ```
 
-Form mode was introduced in SDK 1.1.0. SDK 2.0.0 adds explicit preparation through the available additive API. Typed `FormShapeResult` and optional header `a0` support remain unchanged. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
+Form mode was introduced in SDK 1.1.0. SDK 2.1.0 adds explicit preparation through the available additive API. Typed `FormShapeResult` and optional header `a0` support remain unchanged. See the [Python](./guide/python.md) and [JavaScript](./guide/javascript.md) guides.
 
 Do not URL-encode `form_body` again or pass the combined body to a form serializer. A serializer may turn `%` into `%25`, collapse duplicate keys or change application encoding. If you need to rebuild a form, iterate `form_fields` with `.items()` or `Object.entries` in returned order, append the application's ordered pairs, and serialize that entire list **once**, without also adding `form_body`. Never merge pairs into a dictionary/object.
 
@@ -263,13 +263,11 @@ Generate fresh telemetry for each application request. A material reference reus
 Check the target response body as well as its HTTP status. Generation success does not establish target acceptance. Compare the final raw body and Form Data with the observed request when diagnosing a challenge. See [troubleshooting](./guide/troubleshooting.md).
 
 
-## Explicit form readiness
+## Optional form readiness
 
-Prepare the full form ShapeRequest before workload startup, including the exact
-original application body, current profile/source-document cookies, and form
-identity. Partial material or partial form output fails preparation. `ready`
-confirms complete requested output validation/publication and the `rust` backend;
-it is metadata, not a set of old form fields to replay. Reprepare after readiness
-expiry or relevant context changes. A [30-day migration window and cutoff](./reference/preparation.md)
-will be announced separately; mandatory enforcement is not enabled and no cutoff
-date is set. `generate` never prepares or waits implicitly.
+Form mode currently requires explicit material. Optionally prepare the full
+current form context before a workload. Usable validated defaulted mappings can
+be ready; required form-output validation and publication still apply. Generation
+is a separate call. Resume waits with the preparation ID, and prepare current
+context again after readiness expiry or relevant input changes. See the
+[preparation contract](./reference/preparation.md).

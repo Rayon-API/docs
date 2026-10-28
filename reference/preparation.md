@@ -1,29 +1,14 @@
-# Material preparation
+# Optional material preparation
 
-The additive preparation API is available. Explicitly prepare and wait before
-starting a workload. Legacy generation remains available; mandatory preparation is not enabled.
-A 30-day migration window and cutoff will be announced separately; no cutoff date
-is set. Rust-only enforcement remains gated on complete-output readiness and the
-announced migration. Installing an SDK does not enable enforcement.
+Managed public header generation does not need preparation. Use these helpers
+when you supply explicit material and want to check readiness before a workload.
+Provide either `scripts` or `material_ref` with the full current source, profile,
+request, cookies and mode/form context. Omitting both is invalid on this route.
 
-## Prepare at startup, then begin the workload
-
-Collect the complete ordered scripts, current profile, source-document cookies
-when needed, exact request, and header/form context. Explicitly prepare that full
-context and wait for `ready` before starting a workload. Preparation uses the
-existing [ShapeRequest](./shape.md) unchanged: provide `scripts` XOR `material_ref`.
-The API never downloads scripts or fetches the target page.
-
-`ready` requires validated complete requested output and successful publication.
-Partial material or partial outputs fail preparation instead of becoming ready.
-A successful source upload alone is not readiness. Only `ready` reports
-`execution_backend: "rust"`; every other state reports null. No response contains
-learned scripts, generated headers, form telemetry, cookies, or the source text.
-
-After the planned migration window and enforcement rollout, unprepared contexts
-must be prepared before generation; generation will not learn implicitly. Until
-enforcement is announced and enabled, legacy serving behavior remains unchanged. `generate` retains its
-request signature and result frame and never calls preparation or waits for a job.
+Ready requires usable validated output and successful publication. Defaulted or
+partial internal mappings can be accepted; required generated outputs must still
+validate. A source reference alone does not establish readiness. Ready metadata
+contains no scripts, cookies or generated telemetry. Generation is a separate call.
 
 ## Routes and authentication
 
@@ -31,7 +16,7 @@ Use the same server-side `Authorization: Bearer <API_KEY>` as `/v1/shape`.
 
 | Operation | Request | Response |
 | --- | --- | --- |
-| Create a preparation | `POST /v1/materials/prepare` with the existing full ShapeRequest | HTTP 200 when ready, HTTP 202 while pending |
+| Create a preparation | `POST /v1/materials/prepare` with the full explicit-material ShapeRequest | HTTP 200 when ready, HTTP 202 while pending |
 | Read or long poll a job | `GET /v1/materials/preparations/{preparation_id}?wait=0` | HTTP 200 with the current state |
 
 `wait` is an integer from 0 through 10 seconds. Prefer `wait=10` for long polling,
@@ -53,9 +38,9 @@ with jitter. They do not retry arbitrary generation requests.
 | --- | --- |
 | `queued` | Accepted; wait or resume status reads. |
 | `learning` | The supplied full context is being prepared. |
-| `validating` | Complete requested outputs are being checked. |
+| `validating` | Required generated outputs are being checked. |
 | `publishing` | Validated material is being made available. |
-| `ready` | Complete validation/publication succeeded; readiness has a bounded lifetime. |
+| `ready` | Validation/publication succeeded; readiness has a bounded lifetime. |
 | `failed` | Terminal failure; inspect safe structured metadata, correct the inputs, and explicitly prepare again. |
 | `expired` | The preparation has expired; explicitly prepare again with current inputs. |
 
@@ -89,10 +74,10 @@ These are illustrative metadata values, not a deployed job.
 
 | Client | Explicit methods |
 | --- | --- |
-| JavaScript / TypeScript 2.0.0 | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
-| Python 2.0.0 sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
-| Go v2.0.0 (`/v2` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
-| Playwright 1.0.0 | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
+| JavaScript / TypeScript 2.1.0 | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
+| Python 2.1.0 sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
+| Go v2.1.0 (`/v2` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
+| Playwright 1.1.0 | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
 
 JavaScript waits default to `waitTimeoutMs: 60000`; Python waits default to
 `wait_timeout=60` seconds. Go waits respect the context and last at most 60 seconds.
@@ -105,7 +90,7 @@ and a safe `preparation_id`. It does not send a server-side cancellation request
 Playwright `collectMaterial` only collects `CollectedMaterial`. The old
 `PreparedMaterial` collector type is a deprecated alias, not evidence of server
 readiness. Pass collected material plus its exact generation context to
-`prepareMaterial` or `prepareAndWait` before generating.
+`prepareMaterial` or `prepareAndWait` when you need a readiness check before generating.
 
 ## Expiry, context changes and fresh output
 
