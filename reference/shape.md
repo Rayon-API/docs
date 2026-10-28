@@ -21,7 +21,7 @@ explicit inputs. [Form mode](../form-payload-integration.md) needs explicit mate
 | `mode` | Optional `header` (default) or `form`. |
 | `form` | Optional form-mode-only object with `id`/`name` strings, at most 256 characters each; no controls. |
 | `source_url` | Required source-page URL. Automatic selection uses a registered HTTPS source (port 443); preserve the page path and query. |
-| `scripts` | Ordered nonempty `{url, source, inline?}` list. Optional explicit override instead of `material_ref`. Omit both for automatic header selection. |
+| `scripts` | Ordered nonempty `{url, source}` list. Optional explicit override instead of `material_ref`. Omit both for automatic header selection. |
 | `material_ref` | Optional explicit override, scoped to the creating key and original source context. |
 | `profile` | [Supported browser profile](../guide/profiles.md). |
 | `request.url` | Exact protected endpoint URL, including query parameters. |
@@ -44,7 +44,7 @@ HTTP 200 returns:
 
 | Field | Meaning |
 | --- | --- |
-| `headers` | Header mode only. Six required common-prefix suffixes `a/b/c/d/f/z` plus optional same-family `a0` freshly emitted by the selected material; `d` may be empty. Names may use a hyphen or a compact prefix. Forward the entire map unchanged. |
+| `headers` | Header mode only. Six required common-prefix suffixes `a/b/c/d/f/z` plus optional same-family `a0` freshly emitted by the selected material; `d` may be empty. Forward the entire map unchanged. |
 | `request_id` | Correlation ID, also in `X-Request-ID`. |
 | `generation_ms` | Server generation time; excludes upload/network overhead. |
 | `profile_used` | Sanitized effective profile, without canvas pixels or cookies. |

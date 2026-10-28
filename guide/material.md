@@ -16,8 +16,6 @@ to choose material yourself. Explicit fields override automatic selection.
 Form mode currently requires one of these inputs. Null, empty fields and both
 fields together are invalid. The collection example below is optional.
 
-For an inline script override, use `{url: document_url, source: full_source, inline: true}`. Omit `inline` for external scripts.
-
 ## 1. Choose the URLs
 
 Select the protection loader, payload and required dependencies in execution order. If you need to identify them, [Network inspection](./preparation-walkthrough.md#1-prepare-the-script-sources-and-request) can help. Preserve complete URLs, including seeds and query strings. Replace the reserved example URLs below with those for your flow.

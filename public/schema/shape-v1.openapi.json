@@ -925,11 +925,6 @@
           "source": {
             "title": "Source",
             "type": "string"
-          },
-          "inline": {
-            "type": "boolean",
-            "default": false,
-            "description": "True for source embedded in the document; url identifies that document and currentScript.src remains empty."
           }
         },
         "required": [
@@ -1520,15 +1515,15 @@
             "minProperties": 6,
             "maxProperties": 7,
             "propertyNames": {
-              "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-?(?:[aA]0|[aAbBcCdDfFzZ])$"
+              "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-(?:[aA]0|[aAbBcCdDfFzZ])$"
             },
             "patternProperties": {
-              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-?(?:[aA]0|[aAbBcCdDfFzZ])$": {
+              "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,128}-(?:[aA]0|[aAbBcCdDfFzZ])$": {
                 "type": "string"
               }
             },
             "additionalProperties": false,
-            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family with one optional same-family a0 header when the selected material emits it during this generation. All six core suffixes are required; suffixes and prefixes compare case-insensitively, with no duplicate suffixes. Original header names, values and case are preserved. Header names use ASCII HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty, and a0 must be nonempty. Other numbered suffixes are not accepted. Generation does not assert target acceptance. Both separated (prefix-a) and compact (prefixa) material header names are preserved exactly."
+            "description": "Complete customer-specific same-prefix a/b/c/d/f/z family with one optional same-family a0 header when the selected material emits it during this generation. All six core suffixes are required; suffixes and prefixes compare case-insensitively, with no duplicate suffixes. Original header names, values and case are preserved. Header names use ASCII HTTP token characters and need no X- prefix. Values contain only ASCII bytes 0x21 through 0x7e with no whitespace; d may be empty, and a0 must be nonempty. Other numbered suffixes are not accepted. Generation does not assert target acceptance."
           },
           "request_id": {
             "type": "string",
