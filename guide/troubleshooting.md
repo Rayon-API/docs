@@ -1,5 +1,10 @@
 # Troubleshooting
 
+`material_cache_unavailable` means automatic material is warming or temporarily
+unavailable. Respect `Retry-After` and contact support with the request ID if it
+continues. You do not need to collect scripts to use the managed flow.
+
+
 For automatic public header generation, leave material omitted. If the source is
 unsupported or `fallback_reason` is non-null, contact support with the request ID.
 A fallback response may still be HTTP 200; do not infer the path from latency.
