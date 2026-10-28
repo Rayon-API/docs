@@ -1,87 +1,117 @@
 # JavaScript / TypeScript SDK
 
-Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript declarations are included. Keep the SDK and API key server-side. The preparation API is available; use the explicit helpers before workload startup.
+Rayon manages current material for supported public sources. Send the source-page
+URL, profile and exact request. No script collection or preparation is needed for
+this header flow. Replace the reserved example URLs with your approved source and
+endpoint. `{}` uses default profile values; supply measured values when needed.
 
-## 1. Install
+Keep the API key server-side. Your integration owns the target HTTP client,
+authentication, cookies and session. Rayon generates telemetry; your client sends
+the target request.
+
+[Quickstart](https://docs.rayonapi.com/quickstart) ·
+[Material options](https://docs.rayonapi.com/material) ·
+[API reference](https://docs.rayonapi.com/api-reference)
+
+## Install
+
+Requires Node.js 20.18.1+. ESM, CommonJS and TypeScript are included.
 
 ```sh
-npm install rayon-sdk-js@^2.0.0
+npm install rayon-sdk-js@^2.1.0
 ```
 
-## 2. Prepare at startup with a persistent client
-
-Start with the [Quickstart](./quickstart.md). Prepare `shape.json` using the shared [input guide](./preparation-walkthrough.md). Check free account usage before generation, then apply the result through your existing target integration.
+## Generate
 
 ```javascript
-import { readFile } from 'node:fs/promises'
-import { RayonClient } from 'rayon-sdk-js'
+import { RayonClient } from 'rayon-sdk-js';
 
-const shape = JSON.parse(await readFile('shape.json', 'utf8'))
-const apiKey = process.env.RAYON_API_KEY
-if (!apiKey) throw new Error('Set RAYON_API_KEY')
-const client = new RayonClient(apiKey, { timeoutMs: 45000 })
+const apiKey = process.env.RAYON_API_KEY;
+if (!apiKey) throw new Error('Set RAYON_API_KEY');
+const client = new RayonClient(apiKey);
 try {
-  const usage = await client.usage() // Free; no generation quota used.
-  const ready = await client.prepareAndWait(shape, { waitTimeoutMs: 60000 })
-  const { scripts, ...current } = shape
-  const result = await client.generate({ ...current, material_ref: ready.material_ref })
-  // Apply result.headers in your existing target session.
+  const result = await client.generate({
+    source_url: 'https://shop.example.com/account',
+    profile: {},
+    request: {
+      url: 'https://shop.example.com/api/check', method: 'POST',
+      content_type: 'application/json', body: '{}',
+    },
+  });
+  if (result.fallback_reason) {
+    console.warn('A fallback was used. Contact support with request ID:', result.request_id);
+  }
+  // Apply result.headers with your target client. Keep client open for further calls.
 } finally {
-  await client.close()
+  await client.close();
 }
 ```
 
-To cancel, pass an `AbortSignal`:
+Apply every returned header unchanged, including optional `a0`, to the exact
+request. Keep application headers and session state in your target client.
+Generate fresh telemetry for each request and inspect the target response to
+check acceptance. Rayon returns no target cookies.
+
+## Fallback reporting
+
+When `fallback_reason` is present and non-null, a fallback was used. Contact
+support with `request_id` about the mapping issue. `fallback_message` provides
+safe guidance when available. Do not infer fallback from timing alone.
+
+Results also expose optional `path`, `material_reuse`, `discovery_state` and
+`discovery_duration_ms`. Older responses can omit these fields.
+
+## Optional material and preparation
+
+For an explicit override, supply either `scripts` (complete ordered sources) or
+`material_ref` (a private reference), never both. Omit the unused field; null and
+empty values are invalid. Customer uploads and references remain private to the
+API key. Automatic requests should keep both fields omitted on every call so
+new public material can be selected.
+
+Form mode still requires explicit material. Set `mode: "form"`, supply the exact
+URL-encoded POST application body before telemetry insertion, and prepend the
+returned `form_body` once. It contains telemetry only. Preserve duplicate fields
+and encoding. See [form integration](https://docs.rayonapi.com/form-payload-integration).
+
+Preparation is optional for explicit material. It checks the supplied context
+before a workload; it is separate from managed selection and generation.
+Usable validated mappings can be ready without every internal record being mapped.
+Generated headers and form fields must still pass output validation.
 
 ```javascript
-const controller = new AbortController()
-const result = await client.generate(shape, { signal: controller.signal })
+// explicitShape includes scripts or material_ref and the current full context.
+const ready = await client.prepareAndWait(explicitShape, { waitTimeoutMs: 60_000 });
+const { scripts, material_ref, ...context } = explicitShape;
+const result = await client.generate({ ...context, material_ref: ready.material_ref });
 ```
 
-## 3. Handle results and errors
+`prepare`, `getPreparation(id, { wait: 0 })`, `waitUntilReady` and
+`prepareAndWait` remain available. Waits default to 60 seconds; status long polls
+accept 0–10 seconds. Timeout or abort leaves the server job running. Resume with
+`RayonError.preparationId`. Terminal kinds are `preparation_failed` and
+`preparation_expired`. Readiness expires separately from the source reference;
+prepare current explicit context again when readiness expires or inputs change.
 
-[Apply `result.headers`](./applying-headers.md) unchanged. Structured errors expose safe messages, codes and request IDs. SDK 1.1.3+ adds readable guidance from a trusted error catalog. Optional `reason`, `action`, `domain`, `field` and `billingStatus` explain the next step. The client reuses API connections, validates results and never downloads target material. The material recovery behavior below is the only automatic generation retry.
+## Client options and errors
 
-```javascript
-import { RayonError } from 'rayon-sdk-js'
+Reuse one client for connections. `usage()` is a free access/allowance check.
+Default API URL: `https://api.rayonapi.com`; timeout: 45 seconds. Constructor
+options include `baseUrl`, `timeoutMs` and a caller-owned `dispatcher`.
+Pass `{ signal }` to cancel a call. CommonJS: `const { RayonClient } = require('rayon-sdk-js')`.
+Use `validate_profile` for offline profile validation.
 
-try {
-  await client.generate(shape)
-} catch (error) {
-  if (!(error instanceof RayonError)) throw error
-  console.error(error.message, error.action, error.requestId)
-  // Check history before retrying if billingStatus is pending or unknown.
-}
-```
+`RayonError` exposes `kind`, `statusCode`, `requestId`, `code`, `retryAfter`,
+`reason`, `action`, `domain`, `field`, `billingStatus` and `retryable` when available.
+Check request history before retrying a timeout or uncertain billing outcome.
+Only a definite uncharged `material_expired` receives one recovery attempt, and
+only while original explicit sources remain retained in that client. No other
+generation error is automatically retried.
 
-`billingStatus: 'not_charged'` confirms no charge. An absent billing status is unknown. See [error and retry guidance](../reference/errors.md).
+Explicit-source caching retains up to 128 bundles / 16 MiB per client, coalesces
+uploads and refreshes near expiry. References last up to five minutes and may
+expire earlier. Automatic generation never pins a returned reference. The SDK
+does not fetch target scripts, send target requests or cache generated telemetry.
 
-Keep one client open across requests. Python and JavaScript SDK 2.0.0 reuse material
-in both modes and generate fresh telemetry each time. The shared [material policy](./material.md#4-reuse-source-with-a-material-reference)
-covers retention, expiry, concurrent calls and the single confirmed uncharged recovery.
-Other generation failures are not automatically retried. The one-shot helper closes
-after one call, so use a persistent client for an integration.
 
-Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-js) for types and options.
-
-`generation_ms` measures server generation. Time the complete API call for upload/network latency. Cancellation or timeout can occur after billing settlement; check usage/history before retrying.
-
-Forward the complete returned header map unchanged, including optional same-family `a0`. Never append captured telemetry or split `a`.
-
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; the SDK supports form mode.
-
-[Python](./python.md) · [JavaScript / TypeScript](./javascript.md) · [Go](./go.md) · [Playwright](./playwright.md)
-
-## Explicit preparation and resumable waits
-
-Use `prepare(shape, options)` to start one job, `getPreparation(id, { wait: 0 })`
-to inspect it, `waitUntilReady(id, { waitTimeoutMs: 60000, signal })` to wait, or
-`prepareAndWait(shape, options)` to combine the explicit steps. `ReadyMaterial`
-contains safe metadata only. `RayonError.preparationId` lets you resume a bounded,
-interrupted wait. Terminal kinds are `preparation_failed` and
-`preparation_expired`; cancellation and timeout do not cancel the server job.
-
-Prepare the exact full context again after readiness expiry or relevant input
-changes. The source-only generation cache is separate from readiness, and
-`generate` never prepares or waits implicitly. See [preparation states, lifetimes
-and planned migration](../reference/preparation.md).
+See [preparation states and resumption](../reference/preparation.md), [errors](../reference/errors.md) and [all request fields](../reference/shape.md).

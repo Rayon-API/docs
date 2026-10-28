@@ -1,77 +1,132 @@
 # Playwright SDK
 
-Use this optional server-side adapter when you already own a Playwright `Page`.
-It wraps the JavaScript SDK and keeps your browser, context, proxy and session under
-your control. Requires Node.js 20.18.1+ and your existing Playwright setup.
-The preparation API is available. Install the 1.0.0 adapter:
+Use managed public material without collecting scripts. Your integration keeps
+control of its browser, HTTP client and target session. The adapter never launches
+a browser or sends the target request.
+
+## Install
+
+Requires Node.js 20.18.1+ and your existing Playwright setup. ESM, CommonJS and
+TypeScript are included.
 
 ```sh
-npm install rayon-sdk-playwright@^1.0.0 playwright-core
+npm install rayon-sdk-playwright@^1.1.0 playwright-core
 ```
 
-[Source and releases](https://github.com/Rayon-API/rayon-sdk-playwright).
+## Generate with managed material
 
-## Check usage, collect, prepare, wait, generate and apply
-
-If you already have collected material, skip collection and explicitly prepare it
-with the exact generation context before calling `generate`.
-Otherwise supply the exact script URLs in execution order and an action on your
-existing page that causes their responses. Collection does not discover URLs,
-launch a browser or send the protected target request for you. Review the action
-because it runs in your existing authenticated browser.
-
-```javascript
+```typescript
 import { RayonPlaywright } from 'rayon-sdk-playwright';
 
-// page belongs to your application; keep the API key in Node, outside the page.
 const apiKey = process.env.RAYON_API_KEY;
 if (!apiKey) throw new Error('Set RAYON_API_KEY');
 const client = new RayonPlaywright(apiKey);
 try {
-  console.log(await client.usage()); // Free; no generation quota used.
-  const material = await client.collectMaterial(page, {
-    scriptUrls: ['https://shop.example.com/protection.js?seed=observed'],
-    action: async () => { await page.reload(); },
-    // Set includeDocumentCookie: true only when the protection needs it.
-  });
-  const generationContext = {
+  const result = await client.generateManaged({
+    source_url: 'https://shop.example.com/account',
+    profile: {},
     request: {
-      url: 'https://shop.example.com/api/check',
-      method: 'POST',
-      content_type: 'application/json',
-      body: '{"username":"example_user"}',
+      url: 'https://shop.example.com/api/check', method: 'POST',
+      content_type: 'application/json', body: '{}',
     },
-  };
-  const ready = await client.prepareAndWait(material, generationContext, { waitTimeoutMs: 60000 });
-  const result = await client.generate(material, generationContext);
-  // Apply result.headers to that exact request in your existing integration.
-  // Reuse client here for further requests with their current inputs.
+  });
+  if (result.fallback_reason) {
+    console.warn('A fallback was used. Contact support with request ID:', result.request_id);
+  }
+  // Apply every result.headers entry, including optional a0, with your target client.
 } finally {
   await client.close();
 }
 ```
 
-The URLs and application request are placeholders. Collected profile values describe
-that page; the adapter does not invent measurements or capture protection-specific
-canvas pixels. JavaScript-visible cookies are opt-in; HttpOnly cookies remain in your
-browser. See the shared [input guide](./preparation-walkthrough.md) for completeness
-and session requirements.
+Replace the reserved URLs with your approved supported public source and endpoint.
+`profile: {}` uses defaults; supply measured values when needed. Keep `scripts`
+and `material_ref` omitted on later automatic calls so updates are selected.
+No page capture or preparation is required for this flow. Managed form mode is
+not supported; use explicit material for form telemetry.
 
-Collection supports `timeoutMs` and `signal`. Generation accepts JavaScript SDK
-request options, including `signal`, and header/form mode overloads. For
-[form telemetry](../form-payload-integration.md), pass `mode: 'form'` and compose
-`result.form_body` once with the original encoded application body. `close()`
-(or `dispose()`) closes the adapter's API client; your browser remains caller-owned.
-See [material reuse](./material.md#4-reuse-source-with-a-material-reference) and
-[errors](../reference/errors.md) for the underlying JavaScript client's policy.
+Fallback and operation metadata come from the core SDK. A non-null
+`fallback_reason` means a fallback was used; report the request ID to support.
+Timing alone does not identify fallback. Customer uploads stay private.
 
-[Python](./python.md) · [JavaScript / TypeScript](./javascript.md) · [Go](./go.md) · [Playwright](./playwright.md)
+## Optional collection from an existing page
 
-`collectMaterial` returns `CollectedMaterial` and does not create a server job.
-The old collector type `PreparedMaterial` is a deprecated alias, not server
-readiness. Use `prepareMaterial(material, generationContext, options)` to start a
-job, then `getPreparation` or `waitUntilReady` to inspect/resume it; or explicitly
-combine the steps with `prepareAndWait` as above. A ready result contains safe
-metadata, not old generated headers. Cancelling a wait leaves the server job
-running. Prepare again after readiness expiry or relevant full-context changes.
-See [preparation states and the planned migration](../reference/preparation.md).
+Use collection when you need to supply your own material. You own the `Page`,
+profile and session. Collection does not establish server readiness.
+
+```typescript
+import { RayonPlaywright } from 'rayon-sdk-playwright';
+import type { Page } from 'playwright-core';
+
+async function generateForPage(page: Page) {
+  const apiKey = process.env.RAYON_API_KEY;
+  if (!apiKey) throw new Error('Set RAYON_API_KEY');
+  const rayon = new RayonPlaywright(apiKey);
+  try {
+    const usage = await rayon.usage(); // Free; no generation quota used.
+    const material = await rayon.collectMaterial(page, {
+      scriptUrls: ['https://example.com/protection.js'], // Known, ordered URLs.
+      action: async (page, signal) => {
+        signal.throwIfAborted();
+        await page.goto('https://example.com/source', { timeout: 25_000 });
+      },
+      // includeDocumentCookie: true, // Opt in only when required.
+    });
+    return await rayon.generate(material, {
+      request: {
+        url: 'https://example.com/submit', method: 'POST',
+        content_type: 'application/json', body: ' {"item": 1}\n',
+      },
+    });
+  } finally {
+    await rayon.close(); // Leaves your page/context/browser open.
+  }
+}
+```
+
+Apply returned `headers` unchanged using your existing target client/session.
+The adapter never sends the target request or applies output automatically.
+Keep one client across generations for connection pooling and explicit material reuse. Supply the exact current
+request every time; recollect or update snapshots when scripts, profile or cookies
+change. Collected `{ source_url, scripts, profile, document_cookie? }` also works
+with `generate` directly. Form mode returns `form_fields` and `form_body`.
+
+Collection observes only the explicitly listed main-frame script requests started
+during `action`. Default deadline: 30 seconds. Limits: 16 scripts, 2 MiB each,
+3 MiB combined. Cookies are opt-in and never include HttpOnly cookies. Captured
+profiles omit canvas pixels; omitted fields use API defaults, not measurements.
+Honor the action's abort signal and set Playwright timeouts. Read the
+[reference](https://github.com/Rayon-API/rayon-sdk-playwright/blob/main/docs/reference.md) for collection/cancellation and encoding limits.
+
+API errors, output types, caching and retry policy come from `rayon-sdk-js`.
+Check request history before resubmitting an uncertain billing outcome. See
+[error guidance](https://docs.rayonapi.com/errors),
+[profiles and sessions](https://docs.rayonapi.com/profiles-and-sessions), and
+[form integration](https://docs.rayonapi.com/form-payload-integration).
+
+Development: `npm ci`, `npx playwright-core install chromium`, `npm test`,
+`npm run build`, `npm run test:package`. Tests use local fixtures only. Set
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to reuse a browser. See
+[release instructions](https://github.com/Rayon-API/rayon-sdk-playwright/blob/main/RELEASE.md), [security](https://github.com/Rayon-API/rayon-sdk-playwright/blob/main/SECURITY.md), and [license](https://github.com/Rayon-API/rayon-sdk-playwright/blob/main/LICENSE).
+
+## Optional server preparation
+
+`collectMaterial` returns `CollectedMaterial`; the deprecated `PreparedMaterial`
+alias means collected inputs, not server readiness. To check explicit material
+before a workload:
+
+```typescript
+const collected = await client.collectMaterial(page, collectionOptions);
+const job = await client.prepareMaterial(collected, { request: targetRequest });
+const ready = await client.waitUntilReady(job.preparation_id, { waitTimeoutMs: 60_000 });
+// Or: await client.prepareAndWait(collected, { request: targetRequest });
+const result = await client.generate(collected, { request: targetRequest });
+```
+
+`getPreparation` and bounded wait helpers remain available. Wait timeout or abort
+leaves the server job running; resume with the typed error's `preparationId`.
+Usable validated defaulted mappings can become ready. Required output validation
+still applies. Readiness expires separately from the source reference.
+
+[Quickstart](https://docs.rayonapi.com/quickstart) · [Adapter reference](https://github.com/Rayon-API/rayon-sdk-playwright/blob/main/docs/reference.md) ·
+[Optional preparation](../reference/preparation.md)

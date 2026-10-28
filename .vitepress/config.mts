@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path'
 
 export default defineConfig({
   title: 'RayonAPI',
-  description: 'Material-only Shape header and form telemetry API and SDK documentation.',
+  description: 'Managed Shape header and form telemetry API and SDK documentation.',
   base: process.env.DOCS_BASE_PATH || '/',
   srcExclude: ['README.md', 'PRODUCT.md', 'DESIGN.md', 'SECURITY.md', 'CHANGELOG.md'],
   cleanUrls: true,
@@ -32,8 +32,8 @@ export default defineConfig({
         { text: 'Core requirements', link: '/guide/requirements' }
       ] },
       { text: 'Integrate', items: [
-        { text: 'Collect inputs', link: '/guide/preparation-walkthrough' },
-        { text: 'Download scripts', link: '/guide/material' },
+        { text: 'Request inputs', link: '/guide/preparation-walkthrough' },
+        { text: 'Material options', link: '/guide/material' },
         { text: 'Browser profiles', link: '/guide/profiles' },
         { text: 'Apply headers', link: '/guide/applying-headers' },
         { text: 'Form payload integration', link: '/form-payload-integration' },
@@ -46,7 +46,7 @@ export default defineConfig({
         { text: 'Troubleshooting', link: '/guide/troubleshooting' }
       ] },
       { text: 'Reference', items: [
-        { text: 'Material preparation', link: '/reference/preparation' },
+        { text: 'Optional preparation', link: '/reference/preparation' },
         { text: 'POST /v1/shape', link: '/reference/shape' },
         { text: 'Errors and limits', link: '/reference/errors' },
         { text: 'GET /v1/usage', link: '/reference/usage' }

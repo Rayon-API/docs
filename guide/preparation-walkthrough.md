@@ -1,14 +1,37 @@
-# Collect inputs and prepare your first request
+# Request inputs
 
-Prepare these inputs in your existing integration, then pass them to an SDK. Use browser capture or downloads only for inputs your flow still needs. The SDK and API do not discover or download scripts.
+For supported public header flows, save this as `shape.json` or construct the
+same object in your application. Replace the reserved URLs with your approved flow.
 
-## Collected SDK inputs
+```json
+{
+  "source_url": "https://shop.example.com/account",
+  "profile": {},
+  "request": {
+    "url": "https://shop.example.com/api/check",
+    "method": "POST",
+    "content_type": "application/json",
+    "body": "{}"
+  }
+}
+```
+
+Do not add `scripts` or `material_ref`; Rayon selects maintained public material.
+Keep material omitted on later calls to receive updates. Supply measured
+[profile values](./profiles.md) and current JavaScript-visible `document_cookie`
+only when your flow needs them. `{}` uses defaults.
+
+All four `request` fields are required. Preserve the exact URL, method, content
+type and body string. GET/HEAD use a null body. Your client owns application
+headers, authentication, the cookie jar and sending the target request.
+
+## Optional explicit material
 
 ### 1. Prepare the script sources and request
 
 | Input | What to supply |
 | --- | --- |
-| `source_url` | The page where the protection executes. It provides context and is never fetched by the API. |
+| `source_url` | The page where the protection executes. Selects the registered public source, or provides context for an explicit upload. |
 | `scripts` | The required protection scripts in execution order, each with its complete URL and full decoded JavaScript `source`. |
 | `profile` | A supported profile object representing the environment for your flow. See the next step. |
 | `request` | Exact `url`, `method`, `content_type` and UTF-8 `body`; include all four fields. GET/HEAD use a null body. |
@@ -71,7 +94,7 @@ Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="u
 
 When needed, add `document_cookie` with current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. Keep cookies and material current for flows that bind them to a session.
 
-Continue with the [SDK quickstart](./quickstart.md#5-prepare-wait-then-generate-and-apply). Reuse the SDK client across generations, update the request and other changing inputs each time, and apply the result using your target integration. Preserve the exact body string: whitespace, key order and Unicode bytes matter. For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md); both SDKs and direct REST support it.
+Continue with the [SDK quickstart](./quickstart.md). Reuse the SDK client across generations, update the request and other changing inputs each time, and apply the result using your target integration. Preserve the exact body string: whitespace, key order and Unicode bytes matter. For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md); both SDKs and direct REST support it.
 
 ## Optional Python download helper
 
@@ -81,12 +104,9 @@ one `curl_cffi` session. It is optional; keep your current integration when it a
 provides these inputs. The workflow reference covers config, cookie scope, form mode,
 allowed origins, offline validation and explicit network flags.
 
-## 4. Prepare on the server before starting the workload
+## Optional server preparation
 
-Collection and local validation do not establish server readiness. With the
-available preparation API, explicitly prepare the full ShapeRequest and wait
-for `ready` before generation. The server validates complete requested outputs;
-partial material or partial output fails preparation. Readiness belongs to the
-exact source/profile/request/cookie/mode/form context and expires independently
-of a source reference. Follow the [quickstart](./quickstart.md) and
-[preparation contract](../reference/preparation.md) for methods and migration status.
+For explicit uploads, [prepare and wait](../reference/preparation.md) when you
+want to check readiness before a workload. This is not needed for managed header
+generation. Preparation still validates required outputs and publication; usable
+defaulted mappings are accepted.

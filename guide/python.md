@@ -1,92 +1,118 @@
 # Python SDK
 
-Requires Python 3.10+. Keep API keys server-side. The preparation API is available; use the explicit helpers before workload startup.
+Rayon manages current material for supported public sources. Send the source-page
+URL, profile and exact request. No script collection or preparation is needed for
+this header flow. Replace the reserved example URLs with your approved source and
+endpoint. `{}` uses default profile values; supply measured values when needed.
 
-## 1. Install
+Keep the API key server-side. Your integration owns the target HTTP client,
+authentication, cookies and session. Rayon generates telemetry; your client sends
+the target request.
+
+[Quickstart](https://docs.rayonapi.com/quickstart) ·
+[Material options](https://docs.rayonapi.com/material) ·
+[API reference](https://docs.rayonapi.com/api-reference)
+
+## Install
+
+Requires Python 3.10+.
 
 ```sh
-python -m pip install 'rayon-sdk-py>=2.0.0,<3'
+python -m pip install 'rayon-sdk-py>=2.1.0,<3'
 ```
 
-## 2. Prepare at startup with a persistent client
-
-Start with the [Quickstart](./quickstart.md). Prepare `shape.json` using the shared [input guide](./preparation-walkthrough.md). Check free account usage before generation, then apply the result through your existing target integration.
+## Generate
 
 ```python
-import json
 import os
-from pathlib import Path
 from rayon_sdk_py import Client
 
-shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
-with Client(os.environ["RAYON_API_KEY"], timeout=45) as client:
-    usage = client.usage()  # Free; no generation quota used.
-    ready = client.prepare_and_wait(shape, wait_timeout=60)
-    current = {name: value for name, value in shape.items() if name != "scripts"}
-    current["material_ref"] = ready.material_ref
-    result = client.generate(current)
-# Apply result.headers in your existing target session.
-```
-
-For async applications:
-
-```python
-from rayon_sdk_py import AsyncClient
-
-async def run_integration(shapes, api_key):
-    async with AsyncClient(api_key, timeout=45) as client:
-        usage = await client.usage()  # Free check.
-        for shape in shapes:
-            ready = await client.prepare_and_wait(shape, wait_timeout=60)
-            current = {name: value for name, value in shape.items() if name != "scripts"}
-            current["material_ref"] = ready.material_ref
-            result = await client.generate(current)
-            # Apply the result through your existing target integration.
-```
-
-## 3. Handle results and errors
-
-[Apply `result.headers`](./applying-headers.md) unchanged. Structured exceptions expose safe messages, codes and request IDs. SDK 1.1.3+ adds readable guidance from a trusted error catalog. Optional `reason`, `action`, `domain`, `field` and `billing_status` explain the next step. The SDK validates results, closes owned connections and never downloads target material. The material recovery behavior below is the only automatic generation retry.
-
-```python
-from rayon_sdk_py import RayonError
-
-try:
+shape = {
+    "source_url": "https://shop.example.com/account",
+    "profile": {},
+    "request": {
+        "url": "https://shop.example.com/api/check",
+        "method": "POST",
+        "content_type": "application/json",
+        "body": "{}",
+    },
+}
+with Client(os.environ["RAYON_API_KEY"]) as client:
     result = client.generate(shape)
-except RayonError as error:
-    print(str(error), error.action, error.request_id)
-    # Check history before retrying if billing_status is pending or unknown.
+    if result.fallback_reason:
+        print("A fallback was used. Contact support with request ID:", result.request_id)
+    # Apply result.headers with your target client. Keep client open for further calls.
 ```
 
-`billing_status == "not_charged"` confirms no charge. An absent billing status is unknown. See [error and retry guidance](../reference/errors.md).
+Use `AsyncClient` with `async with` and `await client.generate(shape)` in async
+applications. Both clients accept the same inputs and return the same metadata.
 
-Keep one client open across requests. Python and JavaScript SDK 2.0.0 reuse material
-in both modes and generate fresh telemetry each time. The shared [material policy](./material.md#4-reuse-source-with-a-material-reference)
-covers retention, expiry, concurrent calls and the single confirmed uncharged recovery.
-Other generation failures are not automatically retried. The one-shot helper closes
-after one call, so use a persistent client for an integration.
+Apply every returned header unchanged, including optional `a0`, to the exact
+request. Keep application headers and session state in your target client.
+Generate fresh telemetry for each request and inspect the target response to
+check acceptance. Rayon returns no target cookies.
 
-Use `validate_profile(profile)` for offline validation. See the [SDK README](https://github.com/Rayon-API/rayon-sdk-py) for types and options.
+## Fallback reporting
 
-`result.generation_ms` measures server generation. Time the complete `client.generate()` call to measure upload, network and API latency. A client timeout can occur after billing settlement; check usage/history before retrying.
+When `fallback_reason` is present and non-null, a fallback was used. Contact
+support with `request_id` about the mapping issue. `fallback_message` provides
+safe guidance when available. Do not infer fallback from timing alone.
 
-Forward the complete returned header map unchanged, including optional same-family `a0`. Never append captured telemetry or split `a`.
+Results also expose optional `path`, `material_reuse`, `discovery_state` and
+`discovery_duration_ms`. Older responses can omit these fields.
 
-For observed URL-encoded form telemetry, follow [Form payload integration](../form-payload-integration.md). Inspect Payload → Form Data as well as headers; the SDK supports form mode.
+## Optional material and preparation
 
-[Python](./python.md) · [JavaScript / TypeScript](./javascript.md) · [Go](./go.md) · [Playwright](./playwright.md)
+For an explicit override, supply either `scripts` (complete ordered sources) or
+`material_ref` (a private reference), never both. Omit the unused field; null and
+empty values are invalid. Customer uploads and references remain private to the
+API key. Automatic requests should keep both fields omitted on every call so
+new public material can be selected.
 
-## Explicit preparation and resumable waits
+Form mode still requires explicit material. Set `mode: "form"`, supply the exact
+URL-encoded POST application body before telemetry insertion, and prepend the
+returned `form_body` once. It contains telemetry only. Preserve duplicate fields
+and encoding. See [form integration](https://docs.rayonapi.com/form-payload-integration).
 
-Use `prepare(shape)` to start one job, `get_preparation(id, wait=0)` to inspect it,
-`wait_until_ready(id, wait_timeout=60)` to wait, or `prepare_and_wait(shape)` to
-combine the explicit steps. `AsyncClient` exposes all four with `await`.
-`ReadyMaterial` contains metadata only. `PreparationError` exposes `kind` and
-`preparation_id`; terminal kinds are `failed` and `expired`, and a bounded wait
-can raise `timeout`. Polling errors also retain the safe job ID. Async wait
-cancellation raises `PreparationError` with `kind="aborted"` and a `preparation_id`; the server
-job continues. No arbitrary generation retry or implicit prepare occurs.
+Preparation is optional for explicit material. It checks the supplied context
+before a workload; it is separate from managed selection and generation.
+Usable validated mappings can be ready without every internal record being mapped.
+Generated headers and form fields must still pass output validation.
 
-Prepare the exact full context again when readiness expires or request/profile/
-cookie/mode/form inputs change. An incomplete bundle or partial output never
-establishes readiness. See [preparation states, lifetimes and planned migration](../reference/preparation.md).
+```python
+# explicit_shape includes scripts or material_ref and the current full context.
+ready = client.prepare_and_wait(explicit_shape, wait_timeout=60)
+current = {k: v for k, v in explicit_shape.items() if k not in ("scripts", "material_ref")}
+result = client.generate({**current, "material_ref": ready.material_ref})
+```
+
+Sync and async clients retain `prepare`, `get_preparation`, `wait_until_ready`
+and `prepare_and_wait`. Waits default to 60 seconds; status long polls accept
+0–10 seconds. `Preparation` exposes states and `ReadyMaterial` confirms readiness.
+Timeout/cancellation leaves the server job running. `PreparationError` retains
+`preparation_id` and a `kind` of `timeout`, `failed`, `expired` or `aborted`.
+Async cancellation raises `PreparationCancelledError`, retaining the resumable ID.
+Readiness expires separately from the source reference; prepare current explicit
+context again after expiry or relevant input changes.
+
+## Client options and errors
+
+Reuse one client for connections. `usage()` is a free access/allowance check.
+Default API URL: `https://api.rayonapi.com`; timeout: 45 seconds. Set `base_url`
+or `timeout` in the constructor. Use `validate_profile` for offline validation.
+
+Errors inherit `RayonError`: `ValidationError`, `TransportError`, `HTTPError`
+and `InvalidResponseError`. Metadata includes `status_code`, `request_id`,
+`code`, `retry_after`, `reason`, `action`, `domain`, `field`, `billing_status`
+and `retryable` when available. Check request history before retrying a timeout
+or uncertain billing outcome. Only a definite uncharged `material_expired`
+receives one recovery attempt, while original explicit sources remain retained.
+No other generation error is automatically retried.
+
+Explicit-source caching retains up to 128 bundles / 16 MiB per client, coalesces
+uploads and refreshes near expiry. References last up to five minutes and may
+expire earlier. Automatic generation never pins a returned reference. The SDK
+does not fetch target scripts, send target requests or cache generated telemetry.
+
+
+See [preparation states and resumption](../reference/preparation.md), [errors](../reference/errors.md) and [all request fields](../reference/shape.md).
