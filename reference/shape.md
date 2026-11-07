@@ -1,10 +1,10 @@
 # POST /v1/shape
 
 
-Generate fresh telemetry for one exact request. Omit material for supported public
-header flows; Rayon selects current material. Explicit uploads and references
-remain optional overrides. [Preparation](./preparation.md) is optional for those
-explicit inputs. [Form mode](../form-payload-integration.md) needs explicit material.
+Generate using ready material. Omit both material fields for supported managed
+header sources. For custom material, complete [preparation](./preparation.md),
+then send the ready reference. Raw-script solves are rejected before cache
+insertion or billing.
 
 | Setting | Value |
 | --- | --- |
@@ -21,8 +21,7 @@ explicit inputs. [Form mode](../form-payload-integration.md) needs explicit mate
 | `mode` | Optional `header` (default) or `form`. |
 | `form` | Optional form-mode-only object with `id`/`name` strings, at most 256 characters each; no controls. |
 | `source_url` | Required source-page URL. Automatic selection uses a registered HTTPS source (port 443); preserve the page path and query. |
-| `scripts` | Ordered nonempty `{url, source}` list. Optional explicit override instead of `material_ref`. Omit both for automatic header selection. |
-| `material_ref` | Optional explicit override, scoped to the creating key and original source context. |
+| `material_ref` | Ready private reference, scoped to its key, supported context and readiness lease. |
 | `profile` | [Supported browser profile](../guide/profiles.md). |
 | `request.url` | Exact protected endpoint URL, including query parameters. |
 | `request.method` | `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`. |
@@ -32,9 +31,10 @@ explicit inputs. [Form mode](../form-payload-integration.md) needs explicit mate
 
 Approve source and endpoint domains for your account. URLs cannot contain credentials, fragments, whitespace or backslashes. Unknown fields, duplicate/prototype JSON keys, nonfinite values and binary bodies are rejected. No proxy/IP field is accepted.
 
-Both material fields together, explicit nulls and empty material values are invalid.
+Raw `scripts` are preparation inputs and are not accepted here. Explicit nulls
+and empty material references are invalid.
 An unregistered automatic source returns `unsupported_material`; contact support.
-Explicit uploads and references stay private and do not enter the public registry.
+Custom uploads and references stay private and do not enter the public registry.
 
 In form mode, the target request must be POST with `application/x-www-form-urlencoded`; `request.body` is the exact encoded application body before telemetry insertion (empty string allowed, null forbidden). One UTF-8 charset parameter is allowed. Malformed percent escapes, invalid UTF-8 and NUL are rejected. Preserve ordered duplicates and empty values; remove only stale telemetry.
 
@@ -50,12 +50,6 @@ HTTP 200 returns:
 | `profile_used` | Sanitized effective profile, without canvas pixels or cookies. |
 | `material_ref` | Private reference for the resolved source bundle. Automatic callers should keep material omitted. |
 | `material_expires_at` | UTC expiry; eviction/restart may invalidate it earlier. |
-| `fallback_reason` | Optional nullable code. Non-null means a fallback was used; contact support with the request ID. |
-| `fallback_message` | Optional safe guidance about the mapping issue. |
-| `path` | Optional execution path: `native` or `isolated`. Use `fallback_reason` for fallback reporting. |
-| `material_reuse` | Optional boolean indicating source reuse. |
-| `discovery_state` | Optional nullable learning state. |
-| `discovery_duration_ms` | Optional nullable learning duration in milliseconds; can be fractional. |
 
 Form mode returns exactly six unsplit `form_fields` with suffixes `a/b/c/d/f/z` (raw names/values in observed order; no `a0`, even when `a` exceeds 7,900 characters) and `form_body` (telemetry only, encoded once), with the same metadata above and without `headers`. Preserve exact case, names and empty values; do not infer a separator from header names. [Compose it with the application body once](../form-payload-integration.md#compose-the-body-once).
 
@@ -67,8 +61,6 @@ No target cookies are returned. [Apply names and values unchanged](../guide/appl
 | --- | --- |
 | JSON upload, compressed and decoded | 4 MiB each |
 | JSON structure | 4,096 nodes including member names; nesting depth 32 |
-| Script source total / individual | 3 MiB / 2 MiB UTF-8 |
-| Scripts | 16 |
 | Request body | 256 KiB UTF-8 |
 | Form application input | 1,024 decoded pairs; 256 UTF-8 bytes per field name |
 | Form output | 16 KiB UTF-8 per value; 256 KiB encoded telemetry body |
@@ -77,4 +69,5 @@ No target cookies are returned. [Apply names and values unchanged](../guide/appl
 | Each URL | 8,192 characters |
 | Header output / API response | 256 KiB |
 
+[Preparation source limits](./preparation.md) apply separately.
 Uploads have a 20-second deadline. Short bursts may wait briefly before admission. Sustained rate or capacity pressure returns 429; unavailable admission capacity returns 503. These pre-admission rejections do not charge generation credits. See [errors](./errors.md) and [usage](./usage.md).

@@ -6,7 +6,7 @@ Developers integrating Shape header generation with their own target HTTP sessio
 
 ## Contract
 
-Public endpoints include generation, usage and optional preparation. Rayon maintains registered public material; explicit customer uploads stay private. The client keeps cookies/proxy state and sends the target request. Successful generation does not guarantee target acceptance.
+Public endpoints include generation, usage and required custom preparation. Rayon maintains registered public material; custom preparation inputs stay private. The client keeps cookies/proxy state and sends the target request. Successful generation does not guarantee target acceptance.
 
 ## Documentation stack
 

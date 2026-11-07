@@ -5,11 +5,9 @@ unavailable. Respect `Retry-After` and contact support with the request ID if it
 continues. You do not need to collect scripts to use the managed flow.
 
 
-For automatic public header generation, leave material omitted. If the source is
-unsupported or `fallback_reason` is non-null, contact support with the request ID.
-A fallback response may still be HTTP 200; do not infer the path from latency.
-For explicit uploads, check script order and required dependencies. Keep keys,
-cookies, bodies and source captures out of public support messages.
+For managed header generation, leave material omitted. For custom sources,
+complete preparation first. Keep keys, cookies, request bodies and source captures
+out of public support messages.
 
 
 Errors use a safe envelope and `X-Request-ID`:
@@ -71,7 +69,9 @@ For support, share the request ID and safe code. Keep scripts, cookies, keys and
 
 ## Decide whether to retry
 
-`error.retryable` is optional. `true` identifies a temporary error; `false` means correct the request or investigate first. An absent value is unknown. Respect `Retry-After`, add jitter and reduce concurrency. SDK 1.1.4+ makes one automatic recovery attempt only after HTTP 422 `material_expired` with `billing_status: not_charged`, using original scripts still retained in that client. There are no background generation requests. Other errors, cancellation and uncertain outcomes are never automatically retried; each explicit retry is a new request.
+`error.retryable` describes the error; it does not make the SDK retry generation.
+Respect `Retry-After` for temporary failures. Fix invalid or expired inputs before
+a new call. Each explicit generation attempt is a separate request.
 
 After a client/network timeout or a response with `billing_status: pending` or `unknown`, check request history before resubmitting. Generation may already have completed. Contact support with the request ID if the outcome remains unclear.
 
@@ -102,6 +102,14 @@ full context; it does not authorize hidden learning or a generation retry.
 
 Preparation POSTs use one stable `Idempotency-Key` per invocation. SDKs do not
 retry ambiguous prepare POSTs. Bounded wait helpers retry only transient GETs
-with jitter and expose a safe preparation ID for resumption. `generate` keeps
-its existing billing/retry behavior; readiness metadata contains no old telemetry
-to replay. See the [preparation contract](./preparation.md).
+with jitter and expose a safe preparation ID for resumption. Generation does not retry automatically. Readiness metadata contains no old
+telemetry to replay. See the [preparation contract](./preparation.md).
+
+## Preparation-required serving
+
+`material_preparation_required` (422) rejects raw-source solves before cache insertion
+or billing. Prepare custom sources and wait for ready, then use the reference.
+`material_not_prepared` (409) means no current ready material supports the
+requested context. Expired source references return `material_expired` (422).
+Generation never retries or starts preparation. Check readiness and both
+expiry deadlines before resubmitting; uncertain billing still requires request-history review.

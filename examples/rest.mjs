@@ -27,6 +27,5 @@ async function api(method, path, payload, timeoutMs = 45000, idempotencyKey) {
   return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)))
 }
 const result = await api('POST', '/v1/shape', shape)
-if (result.fallback_reason) console.warn('A fallback was used. Contact support with request ID:', result.request_id)
 console.log('Generated request:', result.request_id)
 // Apply result.headers using your existing target session and exact request.

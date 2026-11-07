@@ -3,9 +3,8 @@
 ## Managed material
 
 - Make automatic public header generation the default in every SDK guide and REST example.
-- Keep optional private uploads, preparation and explicit-material form mode.
-- Document fallback reporting and synchronize the downloadable schema.
-
+- Require preparation for custom material, including form mode.
+- Document request correlation and synchronize the downloadable schema.
 
 
 ## Material preparation

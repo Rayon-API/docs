@@ -5,22 +5,22 @@ import test from 'node:test';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=path=>readFileSync(root+path,'utf8');
 for (const [path, generate, version] of [
- ['guide/python.md','client.generate','>=2.1.0,<3'],
- ['guide/javascript.md','client.generate','^2.1.0'],
- ['guide/go.md','client.Generate','/v2@v2.1.0'],
- ['guide/playwright.md','client.generateManaged','^1.1.0'],
+ ['guide/python.md','client.generate','>=3.0.0rc1,<4'],
+ ['guide/javascript.md','client.generate','^3.0.0-rc.1'],
+ ['guide/go.md','client.Generate','/v3@v3.0.0-rc.1'],
+ ['guide/playwright.md','client.generateManaged','^2.0.0-rc.1'],
 ]) test(path+' starts with managed generation',()=>{
  const text=read(path); assert.ok(text.includes(version));
  const block=text.match(/```(?:python|javascript|typescript|go)\n([\s\S]*?)\n```/)?.[1];
  assert.ok(block?.includes(generate)); assert.doesNotMatch(block,/prepareAndWait|prepare_and_wait|PrepareAndWait|collectMaterial/);
  assert.match(text,/optional/i);
 });
-test('optional preparation preserves validation, expiry and resumable waits',()=>{
+test('required custom preparation preserves validation, expiry and resumable waits',()=>{
  const text=read('reference/preparation.md');
- for(const word of ['queued','learning','validating','publishing','ready','failed','expired','ready_until','material_expires_at','Idempotency-Key','execution_backend']) assert.ok(text.includes(word),word);
+ for(const word of ['queued','learning','validating','publishing','ready','failed','expired','ready_until','material_expires_at','Idempotency-Key']) assert.ok(text.includes(word),word);
  assert.match(text,/Omitting both is invalid/);
- assert.match(text,/partial internal mappings can be accepted/);
- assert.match(text,/required generated outputs must still/);
+ assert.match(text,/Incomplete preparations cannot be used/);
+
  assert.match(text,/Cancelling a wait stops the client wait; the server job continues/);
  assert.doesNotMatch(text,/30-day|cutoff/);
 });
@@ -80,7 +80,7 @@ assert.equal(calls.length,1);assert.ok(calls[0][0].endsWith('/v1/shape'));const 
 });
 
 
-test('preparation schema and shared safe error catalog describe the additive contract',()=>{
+test('preparation schema and shared safe error catalog describe the current contract',()=>{
  const schema=JSON.parse(read('public/schema/shape-v1.openapi.json'));
  const prep=schema.components.schemas.Preparation;
  assert.equal(prep.additionalProperties,false);
@@ -99,8 +99,18 @@ test('preparation schema and shared safe error catalog describe the additive con
 
 test('schema separates managed header selection from explicit preparation',()=>{
  const schema=JSON.parse(read('public/schema/shape-v1.openapi.json')).components.schemas;
- assert.equal(schema.ShapeRequest.oneOf.length,3);
+ assert.equal(schema.ShapeRequest.oneOf.length,2);
  assert.equal(schema.ExplicitShapeRequest.oneOf.length,2);
- assert.equal(schema.ShapeRequest.oneOf[2].properties.mode.const,'header');
+ assert.equal(schema.ShapeRequest.oneOf[1].properties.mode.const,'header');
  for(const name of ['HeaderShapeResponse','FormShapeResponse']) for(const field of ['path','material_reuse','discovery_duration_ms','discovery_state','fallback_reason','fallback_message']) assert.ok(schema[name].properties[field]);
+});
+
+// Public guidance describes the user contract without exposing execution internals.
+import {readdirSync} from 'node:fs';
+test('published prose, schema and examples omit implementation names',()=>{
+ const pages=readdirSync(root).filter(path=>path.endsWith('.md'));
+ for(const folder of ['guide','reference'])pages.push(...readdirSync(root+folder).filter(path=>path.endsWith('.md')).map(path=>folder+'/'+path));
+ pages.push('public/schema/shape-v1.openapi.json');
+ pages.push(...readdirSync(root+'examples').filter(path=>/\.(py|mjs|go)$/.test(path)).map(path=>'examples/'+path));
+ for(const path of pages)assert.doesNotMatch(read(path),/\b(?:V8|Rust)\b/i,path);
 });

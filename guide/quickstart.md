@@ -14,10 +14,10 @@ requests in the dashboard, once per Discord identity.
 
 | Integration | Install / guide |
 | --- | --- |
-| Python 3.10+ | `python -m pip install 'rayon-sdk-py>=2.1.0,<3'` · [Python](./python.md) |
-| Node.js 20.18.1+ | `npm install rayon-sdk-js@^2.1.0` · [JavaScript / TypeScript](./javascript.md) |
-| Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go/v2@v2.1.0` · [Go](./go.md) |
-| Playwright integration | `npm install rayon-sdk-playwright@^1.1.0 playwright-core` · [Playwright](./playwright.md) |
+| Python 3.10+ | `python -m pip install 'rayon-sdk-py>=3.0.0rc1,<4'` · [Python](./python.md) |
+| Node.js 20.18.1+ | `npm install rayon-sdk-js@^3.0.0-rc.1` · [JavaScript / TypeScript](./javascript.md) |
+| Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go/v3@v3.0.0-rc.1` · [Go](./go.md) |
+| Playwright integration | `npm install rayon-sdk-playwright@^2.0.0-rc.1 playwright-core` · [Playwright](./playwright.md) |
 
 ## 3. Generate
 
@@ -40,8 +40,6 @@ with Client(os.environ["RAYON_API_KEY"]) as client:
             "body": "{}",
         },
     })
-    if result.fallback_reason:
-        print("A fallback was used. Contact support with request ID:", result.request_id)
     # Apply result.headers through your existing target client.
     # Keep this client open for further requests.
 ```
@@ -58,7 +56,7 @@ Rayon can select updated material. Registered public material is maintained by
 Rayon; this does not fetch arbitrary URLs on demand. Your profile, request body
 and session inputs still need to match your flow.
 
-[Optional material overrides](./material.md) and [preparation](../reference/preparation.md)
-remain available. [Form mode](../form-payload-integration.md) currently needs
-explicit material. For unsupported sources or fallback, contact support with
+[Custom material preparation](./material.md) and [preparation](../reference/preparation.md)
+is required for custom sources. [Form mode](../form-payload-integration.md) currently needs
+a ready private reference. For unsupported contexts, contact support with
 the request ID. Check [errors and billing](../reference/errors.md) before retrying.

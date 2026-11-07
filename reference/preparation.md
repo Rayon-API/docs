@@ -1,14 +1,12 @@
-# Optional material preparation
+# Custom material preparation
 
-Managed public header generation does not need preparation. Use these helpers
-when you supply explicit material and want to check readiness before a workload.
+Managed public header generation does not need preparation. Custom material must complete this lifecycle before generation.
 Provide either `scripts` or `material_ref` with the full current source, profile,
 request, cookies and mode/form context. Omitting both is invalid on this route.
 
-Ready requires usable validated output and successful publication. Defaulted or
-partial internal mappings can be accepted; required generated outputs must still
-validate. A source reference alone does not establish readiness. Ready metadata
-contains no scripts, cookies or generated telemetry. Generation is a separate call.
+Ready means validation and publication succeeded for the supported input scope.
+Incomplete preparations cannot be used for generation. A queued job may already
+contain a reference; wait for `state: ready` before using it.
 
 ## Routes and authentication
 
@@ -16,7 +14,7 @@ Use the same server-side `Authorization: Bearer <API_KEY>` as `/v1/shape`.
 
 | Operation | Request | Response |
 | --- | --- | --- |
-| Create a preparation | `POST /v1/materials/prepare` with the full explicit-material ShapeRequest | HTTP 200 when ready, HTTP 202 while pending |
+| Create a preparation | `POST /v1/materials/prepare` with the full ExplicitShapeRequest | HTTP 200 when ready, HTTP 202 while pending |
 | Read or long poll a job | `GET /v1/materials/preparations/{preparation_id}?wait=0` | HTTP 200 with the current state |
 
 `wait` is an integer from 0 through 10 seconds. Prefer `wait=10` for long polling,
@@ -44,14 +42,12 @@ with jitter. They do not retry arbitrary generation requests.
 | `failed` | Terminal failure; inspect safe structured metadata, correct the inputs, and explicitly prepare again. |
 | `expired` | The preparation has expired; explicitly prepare again with current inputs. |
 
-Every state includes `preparation_id`, `state`, `status_url`, `retry_after_ms`,
-`preparation_expires_at`, `material_ref`, `material_expires_at`, `ready_until`,
-`execution_backend`, and `error`. Retry hints are integer milliseconds up to
-60,000. Timestamps use RFC3339. Material reference/expiry are available before
-readiness and do not establish that a job is ready. `ready_until` and
-`execution_backend` are null unless ready; failed/expired states include a
-sanitized structured error. SDKs expose trusted local guidance and discard
-arbitrary server-authored prose.
+Responses include the job ID, state, reference, expiry timestamps, polling hint
+and a safe error when preparation fails. Retry hints are integer milliseconds up
+to 60,000. Timestamps use RFC3339. Legacy diagnostic metadata may also be present;
+use `state` to determine readiness.
+
+Example readiness fields (legacy diagnostics omitted):
 
 ```json
 {
@@ -63,7 +59,6 @@ arbitrary server-authored prose.
   "material_ref": "ref_0123456789abcdef",
   "material_expires_at": "2030-01-01T01:00:00Z",
   "ready_until": "2030-01-01T00:10:00Z",
-  "execution_backend": "rust",
   "error": null
 }
 ```
@@ -74,10 +69,10 @@ These are illustrative metadata values, not a deployed job.
 
 | Client | Explicit methods |
 | --- | --- |
-| JavaScript / TypeScript 2.1.0 | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
-| Python 2.1.0 sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
-| Go v2.1.0 (`/v2` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
-| Playwright 1.1.0 | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
+| JavaScript / TypeScript 3 candidate | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
+| Python 3 candidate sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
+| Go v3 candidate (`/v3` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
+| Playwright 2 candidate | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
 
 JavaScript waits default to `waitTimeoutMs: 60000`; Python waits default to
 `wait_timeout=60` seconds. Go waits respect the context and last at most 60 seconds.
@@ -87,28 +82,25 @@ Cancelling a wait stops the client wait; the server job continues running.
 Python async cancellation raises a typed `PreparationError` with `kind="aborted"`
 and a safe `preparation_id`. It does not send a server-side cancellation request.
 
-Playwright `collectMaterial` only collects `CollectedMaterial`. The old
-`PreparedMaterial` collector type is a deprecated alias, not evidence of server
-readiness. Pass collected material plus its exact generation context to
+Playwright `collectMaterial` only collects `CollectedMaterial`. The ambiguous
+`PreparedMaterial` collector alias was removed in adapter major 2. Pass collected material plus its exact generation context to
 `prepareMaterial` or `prepareAndWait` when you need a readiness check before generating.
 
 ## Expiry, context changes and fresh output
 
-Readiness applies to the exact full source/profile/request/cookie/mode/form context
-that was validated. A shared script bundle does not make a different request or
-session ready. Preparation readiness is separate from source-only material caching;
-clients do not coalesce preparation across different contexts.
+Readiness covers the validated source, profile, request, cookie and mode/form
+scope. Reuse the reference only within that scope. An unchanged script bundle
+does not establish coverage for another origin or session.
 
 `material_expires_at` is source-reference lifetime. `ready_until` is readiness
 lifetime. `preparation_expires_at` bounds job resumption. A material reference can
 outlive readiness. Reprepare explicitly after readiness expires, material changes,
-or any relevant request/profile/session/form context changes. Retain current
+or inputs move outside the validated scope. Retain current
 source inputs so an expired reference can be replaced; update cookies/profile
 from the represented client when the flow requires them.
 
 A `ReadyMaterial` result contains safe metadata, not reusable old generated headers.
 Generate fresh complete headers or form telemetry for each exact request. Apply
 that result once through your own target integration; generation does not prove
-target acceptance. Preserve the existing single confirmed unbilled material-miss
-recovery policy and [check request history](./errors.md) for uncertain generation
-outcomes. Preparation expiry does not authorize an arbitrary generation retry.
+target acceptance. The SDK never retries a generation automatically.
+[Check request history](./errors.md) after an uncertain generation outcome. Preparation expiry does not authorize an arbitrary generation retry.

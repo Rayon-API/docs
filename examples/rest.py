@@ -52,7 +52,5 @@ def api_call(method, path, payload=None, *, idempotency_key=None, timeout=45):
 from pathlib import Path
 shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
 result = api_call("POST", "/v1/shape", shape)
-if result.get("fallback_reason"):
-    print("A fallback was used. Contact support with request ID:", result["request_id"])
 print("Generated request:", result["request_id"])
 # Apply result["headers"] using your existing target session and exact request.

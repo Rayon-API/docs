@@ -2,7 +2,7 @@
 
 | Requirement | What to supply or keep consistent |
 | --- | --- |
-| Protection material | Source-page URL for a supported public source. Explicit scripts or a private reference are optional overrides. |
+| Protection material | Source-page URL for a supported public source. Custom sources must be prepared before using a ready private reference. |
 | Profile | A supported profile object. Supplied values match the represented environment; omitted fields use emulation defaults, not measurements. |
 | Request context | Exact URL, method, content type and UTF-8 body sent to the target. |
 | Application access | Authentication, CSRF, Origin, Referer and other headers when the target flow requires them. |
@@ -15,5 +15,5 @@ Use the supported [material](./material.md) and [profile](./profiles.md) fields.
 
 Start with the [preparation guide](./preparation-walkthrough.md).
 
-Automatic selection supports header mode. Form mode requires explicit material.
+Automatic selection supports header mode. Form mode requires a ready private reference.
 See [material options](./material.md).

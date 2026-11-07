@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Rayon API",
-    "version": "2.1.0",
-    "description": "Managed public header generation, with optional private material overrides. Omit scripts and material_ref to select current material from a registered HTTPS source; arbitrary URLs are not fetched on demand. Exact UTF-8 body preserved; null differs from empty. Successful generation spends one allowance call; failed generation releases its reserved allowance and wallet funds. Validation and capacity rejection are free. Usage is free and separately limited to 60 requests per minute. Paid subscription allowances reset at their verified billing-week expiry without rollover; enterprise weekly allocations reset without rollover; owners and custom allowances reset Monday 00:00 UTC. Preloaded USD wallet funds do not expire. Available complimentary trial/bonus calls are consumed first, then paid weekly calls, then wallet funds at standard $5 per 1,000 successful calls or the eligible paid tier rate ($3.50/$2.50/$2/$1.50). Failed generations return their recorded reservations; the wallet never goes negative. No daily or monthly request cap. Uploads support identity/gzip with 4 MiB compressed and expanded limits. Unknown fields, duplicate/prototype keys, nonfinite numbers and excessive nesting rejected. Active shape uploads and generation share bounded process capacity. Short bursts may wait briefly before admission; queue overflow and persistent capacity pressure reject before body reads or generation credit reservations. Upload reads have a 20-second deadline. JSON structure is limited to 4096 nodes including object member names; script strings are opaque. Preparation is optional, requires explicit material and is separately bounded and uncharged. Validated usable mappings can be ready with defaulted internal records; required generated output validation is unchanged."
+    "version": "3.0.0-rc.1",
+    "description": "Generate telemetry using ready managed material or a ready private reference. Custom sources must complete preparation first. Readiness, supported inputs and reference expiry are enforced independently. Preparation is separately bounded and uncharged. Validation, capacity and failed generation do not spend generation credits."
   },
   "servers": [
     {
@@ -277,16 +277,10 @@
             }
           },
           "409": {
-            "description": "After prepared-only enforcement: material_not_prepared, material_learning or prepared_material_expired; no successful generation charge. Prepare or resume waiting explicitly.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "description": "material_not_prepared: no ready native mapping supports this context."
           }
-        }
+        },
+        "description": "Serve ready material only. Raw scripts are rejected before cache insertion or billing; no foreground learning or foreground preparation."
       }
     },
     "/v1/usage": {
@@ -399,8 +393,8 @@
     },
     "/v1/materials/prepare": {
       "post": {
-        "summary": "Prepare supplied material for subsequent Rust generation",
-        "description": "Optionally prepare explicit material and full context before a workload. Requires scripts or material_ref. Returns safe readiness metadata, never generated telemetry. Validated usable mappings with defaults may become ready; required output validation and publication still apply.",
+        "summary": "Prepare supplied material for subsequent generation",
+        "description": "Prepare custom material for its full supported input context before generation. Requires scripts or material_ref. A reference is usable only after state is ready. Incomplete preparations fail explicitly.",
         "security": [
           {
             "ApiKey": []
@@ -1045,21 +1039,12 @@
             "type": "string",
             "description": "Required source-page URL. Managed selection uses a registered HTTPS source on port 443. Explicit references must match their original source URL."
           },
-          "scripts": {
-            "items": {
-              "$ref": "#/components/schemas/Script"
-            },
-            "maxItems": 16,
-            "minItems": 1,
-            "type": "array",
-            "description": "Optional explicit override: complete ordered JavaScript, 1\u201316 scripts, 2 MiB each / 3 MiB total. Supply scripts or material_ref, never both. Omit both for managed header generation."
-          },
           "material_ref": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[A-Za-z0-9_-]+$",
             "type": "string",
-            "description": "Optional private API-key-scoped source reference. Do not pin this field in managed flows; leave both material fields omitted to select updates."
+            "description": "Private source reference with current native readiness for this supported context. A queued source reference alone does not establish readiness."
           },
           "profile": {
             "$ref": "#/components/schemas/BrowserProfile"
@@ -1097,37 +1082,13 @@
         "oneOf": [
           {
             "required": [
-              "scripts"
-            ],
+              "material_ref"
+            ]
+          },
+          {
             "not": {
               "required": [
                 "material_ref"
-              ]
-            }
-          },
-          {
-            "required": [
-              "material_ref"
-            ],
-            "not": {
-              "required": [
-                "scripts"
-              ]
-            }
-          },
-          {
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "scripts"
-                  ]
-                },
-                {
-                  "required": [
-                    "material_ref"
-                  ]
-                }
               ]
             },
             "properties": {
@@ -1181,7 +1142,7 @@
             }
           }
         ],
-        "description": "For registered public header sources, omit both material fields. Explicit material overrides automatic selection and remains private. Form mode requires an explicit material field. Null/empty material values and both fields together are invalid."
+        "description": "Generation with a ready private reference or ready managed header material. Raw scripts are accepted by preparation only."
       },
       "ShapeResponse": {
         "oneOf": [
@@ -1451,7 +1412,7 @@
               },
               "retryable": {
                 "type": "boolean",
-                "description": "Optional temporary-error guidance; this flag alone does not cause automatic retries. SDK 1.1.4+ retries once only after HTTP 422 material_expired with billing_status not_charged and retained original scripts. Check history after a timeout or pending/unknown billing outcome."
+                "description": "Optional temporary-error guidance. SDKs never retry generation automatically. Check request history after an uncertain outcome."
               },
               "reason": {
                 "type": "string",
@@ -1547,11 +1508,8 @@
           },
           "path": {
             "type": "string",
-            "enum": [
-              "native",
-              "isolated"
-            ],
-            "description": "Optional execution path. Use fallback_reason to detect fallback, not generation time."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "material_reuse": {
             "type": "boolean",
@@ -1564,7 +1522,8 @@
             ],
             "minimum": 0,
             "maximum": 3600000,
-            "description": "Optional learning duration in milliseconds, including fractional values."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "discovery_state": {
             "type": [
@@ -1572,7 +1531,8 @@
               "null"
             ],
             "pattern": "^[a-z][a-z0-9_]{0,63}$",
-            "description": "Optional learning state; current values include not_started, pending, complete, failed and restored."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "fallback_reason": {
             "type": [
@@ -1580,12 +1540,14 @@
               "null"
             ],
             "pattern": "^[a-z][a-z0-9_]{0,63}$",
-            "description": "Non-null means a fallback was used. Contact support with request_id about the mapping issue."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "fallback_message": {
             "type": "string",
             "maxLength": 512,
-            "description": "Optional safe guidance when a fallback is used."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           }
         },
         "title": "HeaderShapeResponse"
@@ -1642,11 +1604,8 @@
           },
           "path": {
             "type": "string",
-            "enum": [
-              "native",
-              "isolated"
-            ],
-            "description": "Optional execution path. Use fallback_reason to detect fallback, not generation time."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "material_reuse": {
             "type": "boolean",
@@ -1659,7 +1618,8 @@
             ],
             "minimum": 0,
             "maximum": 3600000,
-            "description": "Optional learning duration in milliseconds, including fractional values."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "discovery_state": {
             "type": [
@@ -1667,7 +1627,8 @@
               "null"
             ],
             "pattern": "^[a-z][a-z0-9_]{0,63}$",
-            "description": "Optional learning state; current values include not_started, pending, complete, failed and restored."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "fallback_reason": {
             "type": [
@@ -1675,12 +1636,14 @@
               "null"
             ],
             "pattern": "^[a-z][a-z0-9_]{0,63}$",
-            "description": "Non-null means a fallback was used. Contact support with request_id about the mapping issue."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "fallback_message": {
             "type": "string",
             "maxLength": 512,
-            "description": "Optional safe guidance when a fallback is used."
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           }
         },
         "title": "FormShapeResponse"
@@ -1732,7 +1695,7 @@
           },
           "material_ref": {
             "type": "string",
-            "description": "Existing key-scoped source reference; alone it does not establish Rust readiness."
+            "description": "Existing key-scoped source reference; alone it does not establish readiness."
           },
           "material_expires_at": {
             "type": "string",
@@ -1754,10 +1717,8 @@
               "string",
               "null"
             ],
-            "enum": [
-              "rust",
-              null
-            ]
+            "description": "Legacy diagnostic metadata, retained for compatibility. Use preparation state to determine readiness.",
+            "deprecated": true
           },
           "error": {
             "oneOf": [
@@ -1797,7 +1758,7 @@
           "source_url": {
             "title": "Source Url",
             "type": "string",
-            "description": "Source page URL for the supplied material. References must match their original source URL."
+            "description": "Required source-page URL. Managed selection uses a registered HTTPS source on port 443. Explicit references must match their original source URL."
           },
           "scripts": {
             "items": {
@@ -1806,14 +1767,14 @@
             "maxItems": 16,
             "minItems": 1,
             "type": "array",
-            "description": "Complete ordered JavaScript, 1\u201316 scripts, 2 MiB each / 3 MiB total. Supply scripts or material_ref, never both."
+            "description": "Preparation input: complete ordered JavaScript, 1–16 scripts, 2 MiB each / 3 MiB total. Supply scripts or material_ref, never both. Omit both for managed header generation."
           },
           "material_ref": {
             "maxLength": 128,
             "minLength": 16,
             "pattern": "^[A-Za-z0-9_-]+$",
             "type": "string",
-            "description": "Private API-key-scoped source reference used instead of scripts."
+            "description": "Optional private API-key-scoped source reference. Do not pin this field in managed flows; leave both material fields omitted to select updates."
           },
           "profile": {
             "$ref": "#/components/schemas/BrowserProfile"
@@ -1911,7 +1872,7 @@
             }
           }
         ],
-        "description": "Optional preparation input: full context with scripts or material_ref. Material omission is invalid on this route."
+        "description": "Custom sources or an existing source reference and the context to prepare. Wait for explicit ready state."
       }
     }
   }

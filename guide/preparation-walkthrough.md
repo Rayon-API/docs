@@ -25,7 +25,7 @@ All four `request` fields are required. Preserve the exact URL, method, content
 type and body string. GET/HEAD use a null body. Your client owns application
 headers, authentication, the cookie jar and sending the target request.
 
-## Optional explicit material
+## Custom material
 
 ### 1. Prepare the script sources and request
 
@@ -61,7 +61,7 @@ profile = validate_profile(json.loads(Path("profile.json").read_text(encoding="u
 
 Validation checks supplied fields; it does not measure an environment or configure your target HTTP client's identity.
 
-### 3. Assemble `shape.json`
+### 3. Assemble custom preparation input
 
 This example reads two prepared script files and the exact UTF-8 request body. Replace the example URLs and file names with your own approved flow:
 
@@ -89,7 +89,7 @@ shape = {
         "body": Path("request-body.txt").read_bytes().decode("utf-8"),
     },
 }
-Path("shape.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="utf-8")
+Path("preparation.json").write_text(json.dumps(shape, ensure_ascii=False), encoding="utf-8")
 ```
 
 When needed, add `document_cookie` with current JavaScript-visible cookies for the source document. Exclude HttpOnly cookies and cookies outside that document's domain/path scope. Keep cookies and material current for flows that bind them to a session.
@@ -104,9 +104,19 @@ one `curl_cffi` session. It is optional; keep your current integration when it a
 provides these inputs. The workflow reference covers config, cookie scope, form mode,
 allowed origins, offline validation and explicit network flags.
 
-## Optional server preparation
+## Required custom preparation
 
-For explicit uploads, [prepare and wait](../reference/preparation.md) when you
-want to check readiness before a workload. This is not needed for managed header
-generation. Preparation still validates required outputs and publication; usable
-defaulted mappings are accepted.
+For custom material, [prepare and wait](../reference/preparation.md) before
+generation. Only successfully validated material becomes ready. Managed header
+generation does not require this step.
+
+Custom-source files are preparation inputs, not solve inputs. After preparing,
+wait for ready and use the returned reference:
+
+```python
+ready = client.prepare_and_wait(shape, wait_timeout=60)
+context = {k: v for k, v in shape.items() if k not in ("scripts", "material_ref")}
+result = client.generate({**context, "material_ref": ready.material_ref})
+```
+
+Managed header calls instead omit both material fields and do not need collection.

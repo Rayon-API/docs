@@ -30,8 +30,8 @@ curl --fail-with-body --max-time 45 https://api.rayonapi.com/v1/shape \
   --data-binary @shape.json
 ```
 
-Forward every returned header unchanged using your target client. A non-null
-`fallback_reason` means a fallback was used; contact support with `request_id`.
+Forward every returned header unchanged using your target client. Retain
+`request_id` for support.
 Do not retry uncertain billing outcomes without checking request history.
 
 The examples below use one generation POST, reject redirects and bound responses.
@@ -94,8 +94,6 @@ def api_call(method, path, payload=None, *, idempotency_key=None, timeout=45):
 from pathlib import Path
 shape = json.loads(Path("shape.json").read_text(encoding="utf-8"))
 result = api_call("POST", "/v1/shape", shape)
-if result.get("fallback_reason"):
-    print("A fallback was used. Contact support with request ID:", result["request_id"])
 print("Generated request:", result["request_id"])
 # Apply result["headers"] using your existing target session and exact request.
 ```
@@ -132,7 +130,6 @@ async function api(method, path, payload, timeoutMs = 45000, idempotencyKey) {
   return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)))
 }
 const result = await api('POST', '/v1/shape', shape)
-if (result.fallback_reason) console.warn('A fallback was used. Contact support with request ID:', result.request_id)
 console.log('Generated request:', result.request_id)
 // Apply result.headers using your existing target session and exact request.
 ```
@@ -210,9 +207,6 @@ func main() {
 	result, status := api(context.Background(), "POST", "/v1/shape", shape, "")
 	if status != 200 {
 		panic(fmt.Sprintf("Generation HTTP %d", status))
-	}
-	if result["fallback_reason"] != nil {
-		fmt.Println("A fallback was used. Contact support with request ID:", result["request_id"])
 	}
 	fmt.Println("Generated request:", result["request_id"])
 	// Apply result["headers"] using your existing target session and exact request.

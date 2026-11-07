@@ -69,9 +69,6 @@ func main() {
 	if status != 200 {
 		panic(fmt.Sprintf("Generation HTTP %d", status))
 	}
-	if result["fallback_reason"] != nil {
-		fmt.Println("A fallback was used. Contact support with request ID:", result["request_id"])
-	}
 	fmt.Println("Generated request:", result["request_id"])
 	// Apply result["headers"] using your existing target session and exact request.
 }

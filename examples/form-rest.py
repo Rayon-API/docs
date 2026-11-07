@@ -66,7 +66,7 @@ def prepare_and_wait(shape):
         state = job.get("state")
         if state == "ready":
             ref = job.get("material_ref")
-            if (job.get("execution_backend") != "rust" or not job.get("ready_until")
+            if (not job.get("ready_until")
                     or not isinstance(ref, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", ref) or api_key in ref):
                 raise RuntimeError("Invalid readiness metadata")
             return job

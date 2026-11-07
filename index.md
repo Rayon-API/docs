@@ -24,3 +24,5 @@ and form mode remain available for advanced integrations. Your client owns the
 target request and session; successful generation does not prove target acceptance.
 
 Start with the [quickstart](./guide/quickstart.md).
+
+This candidate requires prepared serving and custom preparation. See the [migration guide](./guide/prepared-serving-migration.md) before rollout.

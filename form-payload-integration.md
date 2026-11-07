@@ -173,7 +173,7 @@ def prepare_and_wait(shape):
         state = job.get("state")
         if state == "ready":
             ref = job.get("material_ref")
-            if (job.get("execution_backend") != "rust" or not job.get("ready_until")
+            if (not job.get("ready_until")
                     or not isinstance(ref, str) or not re.fullmatch(r"[A-Za-z0-9_-]{16,128}", ref) or api_key in ref):
                 raise RuntimeError("Invalid readiness metadata")
             return job
@@ -258,16 +258,14 @@ This raw target request sends the generated telemetry once. If you send through 
 
 Send the composed bytes to the exact approved endpoint using POST and `Content-Type: application/x-www-form-urlencoded`. Keep the target's required application headers, scoped cookie jar, CSRF token, authentication, measured browser identity and sticky proxy/IP/transport from material collection. Keep the RayonAPI key in the API call only.
 
-Generate fresh telemetry for each application request. A material reference reuses script source, not tokens or form state; supply current profile, cookies, application body and form identity each time. After `material_expired`, upload your retained scripts again.
+Generate fresh telemetry for each application request. A material reference reuses script source, not tokens or form state; supply current profile, cookies, application body and form identity each time. After `material_expired`, prepare your retained scripts again and wait for readiness.
 
 Check the target response body as well as its HTTP status. Generation success does not establish target acceptance. Compare the final raw body and Form Data with the observed request when diagnosing a challenge. See [troubleshooting](./guide/troubleshooting.md).
 
 
-## Optional form readiness
+## Prepare the form context
 
-Form mode currently requires explicit material. Optionally prepare the full
-current form context before a workload. Usable validated defaulted mappings can
-be ready; required form-output validation and publication still apply. Generation
-is a separate call. Resume waits with the preparation ID, and prepare current
-context again after readiness expiry or relevant input changes. See the
-[preparation contract](./reference/preparation.md).
+Prepare custom material with the full current form context, wait for `state: ready`,
+then generate using its reference. Readiness requires complete validation and
+confirmed publication. Resume a wait using the preparation ID; prepare again after
+expiry or a relevant input change. See the [preparation contract](./reference/preparation.md).
