@@ -14,15 +14,16 @@ requests in the dashboard, once per Discord identity.
 
 | Integration | Install / guide |
 | --- | --- |
-| Python 3.10+ | `python -m pip install 'rayon-sdk-py>=3.0.0rc1,<4'` · [Python](./python.md) |
-| Node.js 20.18.1+ | `npm install rayon-sdk-js@^3.0.0-rc.1` · [JavaScript / TypeScript](./javascript.md) |
-| Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go/v3@v3.0.0-rc.1` · [Go](./go.md) |
-| Playwright integration | `npm install rayon-sdk-playwright@^2.0.0-rc.1 playwright-core` · [Playwright](./playwright.md) |
+| Python 3.10+ | `python -m pip install 'rayon-sdk-py>=3.0.0rc2,<4'` · [Python](./python.md) |
+| Node.js 20.18.1+ | `npm install rayon-sdk-js@^3.0.0-rc.2` · [JavaScript / TypeScript](./javascript.md) |
+| Go 1.23+ | `go get github.com/Rayon-API/rayon-sdk-go/v3@v3.0.0-rc.2` · [Go](./go.md) |
+| Playwright integration | `npm install rayon-sdk-playwright@^2.0.0-rc.2 playwright-core` · [Playwright](./playwright.md) |
 
 ## 3. Generate
 
 Replace the reserved example URLs with your approved source and endpoint.
-`profile: {}` uses defaults; supply measured values when your flow needs them.
+`profile: {}` uses the default managed profile. Other profiles or request origins
+may need [separate preparation](./material.md).
 
 ```python
 import os

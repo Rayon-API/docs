@@ -11,6 +11,9 @@ The source URL selects a registered source, not an arbitrary on-demand download.
 
 ## Custom material requires preparation
 
+Preparation can take several minutes. Wait helpers return as soon as ready, with a
+30-minute default limit. Timeouts and cancellation leave the job available to resume.
+
 Custom sources are accepted by `POST /v1/materials/prepare`, never by `/v1/shape`.
 Wait for `state: ready`, then solve with the private reference.
 Header calls may instead omit both fields for ready managed material. Form calls
@@ -91,7 +94,7 @@ Use a [profile](./profiles.md) appropriate to the represented environment and ex
 
 ```python
 # explicit_shape contains complete scripts and the intended profile/request context.
-ready = client.prepare_and_wait(explicit_shape, wait_timeout=60)
+ready = client.prepare_and_wait(explicit_shape)
 context = {k: v for k, v in explicit_shape.items() if k not in ("scripts", "material_ref")}
 result = client.generate({**context, "material_ref": ready.material_ref})
 ```
