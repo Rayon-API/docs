@@ -5,10 +5,10 @@ import test from 'node:test';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=path=>readFileSync(root+path,'utf8');
 for (const [path, generate, version] of [
- ['guide/python.md','client.generate','>=3.0.0rc1,<4'],
- ['guide/javascript.md','client.generate','^3.0.0-rc.1'],
- ['guide/go.md','client.Generate','/v3@v3.0.0-rc.1'],
- ['guide/playwright.md','client.generateManaged','^2.0.0-rc.1'],
+ ['guide/python.md','client.generate','>=3.0.0rc2,<4'],
+ ['guide/javascript.md','client.generate','^3.0.0-rc.2'],
+ ['guide/go.md','client.Generate','/v3@v3.0.0-rc.2'],
+ ['guide/playwright.md','client.generateManaged','^2.0.0-rc.2'],
 ]) test(path+' starts with managed generation',()=>{
  const text=read(path); assert.ok(text.includes(version));
  const block=text.match(/```(?:python|javascript|typescript|go)\n([\s\S]*?)\n```/)?.[1];
