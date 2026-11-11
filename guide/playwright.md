@@ -6,13 +6,13 @@ a browser or sends the target request.
 
 ## Install
 
-Release candidate. Requires the preparation-required server and core SDK major 3.
+Requires the preparation-required server and core SDK major 3.
 
 Requires Node.js 20.18.1+ and your existing Playwright setup. ESM, CommonJS and
 TypeScript are included.
 
 ```sh
-npm install rayon-sdk-playwright@^2.0.0-rc.2 playwright-core
+npm install rayon-sdk-playwright@^2.0.0 playwright-core
 ```
 
 ## Generate with managed material
@@ -127,6 +127,7 @@ const { scripts, ...context } = collected;
 const result = await client.generate({ ...context, request: targetRequest, material_ref: ready.material_ref });
 ```
 
+Preparation can take several minutes; wait helpers allow 30 minutes by default.
 `getPreparation` and bounded wait helpers remain available. Wait timeout or abort
 leaves the server job running; resume with the typed error's `preparationId`.
 Only successfully validated material becomes ready. Readiness expires separately

@@ -69,10 +69,10 @@ These are illustrative metadata values, not a deployed job.
 
 | Client | Explicit methods |
 | --- | --- |
-| JavaScript / TypeScript 3 candidate | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
-| Python 3 candidate sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
-| Go v3 candidate (`/v3` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
-| Playwright 2 candidate | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
+| JavaScript / TypeScript 3 | `prepare`, `getPreparation`, `waitUntilReady`, `prepareAndWait` |
+| Python 3 sync and async | `prepare`, `get_preparation`, `wait_until_ready`, `prepare_and_wait` |
+| Go v3 (`/v3` module) | `Prepare`, `GetPreparation`, `WaitUntilReady`, `PrepareAndWait` |
+| Playwright 2 | `prepareMaterial`, `prepareAndWait`, `getPreparation`, `waitUntilReady` |
 
 JavaScript waits default to `waitTimeoutMs: 60000`; Python waits default to
 `wait_timeout=60` seconds. Go waits respect the context and last at most 60 seconds.
