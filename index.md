@@ -25,4 +25,4 @@ target request and session; successful generation does not prove target acceptan
 
 Start with the [quickstart](./guide/quickstart.md).
 
-This candidate requires prepared serving and custom preparation. See the [migration guide](./guide/prepared-serving-migration.md) before rollout.
+Custom material must be prepared before generation. See the [migration guide](./guide/prepared-serving-migration.md) when upgrading.

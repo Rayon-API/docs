@@ -1,31 +1,23 @@
-# Migration to preparation-required serving
+# Upgrade to preparation-required serving
 
-This is an unpublished release-candidate contract. Roll out the verified server
-and migrate clients before publishing SDKs and these docs as the production contract.
+Use Python, JavaScript or Go SDK 3, or Playwright SDK 2. Custom material must
+be prepared before generation. Managed header requests omit both material fields.
 
-Managed header requests omit both material fields. Cold or unavailable managed
-sources return an explicit availability error.
+1. Submit complete custom material to `/v1/materials/prepare`.
+2. Wait for `state: ready`, using the returned preparation ID.
+3. Generate with the returned material reference.
 
-Custom integrations submit complete scripts to preparation, wait for `state:
-ready`, then generate with the returned reference. Raw-script solves return
-`material_preparation_required` before cache insertion or billing. References
-outside current readiness return `material_not_prepared`; expired references
-return `material_expired`.
+Raw-script generation returns `material_preparation_required` before cache
+insertion or billing. References outside current readiness return
+`material_not_prepared`; expired references return `material_expired`. Managed
+material that is unavailable returns an explicit availability error.
 
-Generation never uploads sources, starts preparation or retries automatically.
-Retain the preparation ID after a wait timeout or cancellation so you can resume
-polling. Refresh custom material before its readiness or source expiry, and switch
-references only when the replacement is ready. Supported input bounds remain in
-force; readiness does not guarantee downstream acceptance.
+Generation does not upload material, start preparation or replace expired
+references automatically. After a wait timeout or cancellation, retain the
+preparation ID to resume polling. Prepare replacement material before expiry
+and switch references when the replacement is ready. Readiness does not
+guarantee downstream acceptance.
 
-SDK candidates are Python/JS/Go major 3 and Playwright major 2. Make compatible
-preparation available first, distribute the reviewed SDKs, migrate direct-upload
-clients, then enforce the new solve contract in the coordinated cutover. Publish
-core JS before Playwright. Keep existing clients working during the announced
-migration window; do not silently switch their serving contract.
-
-The candidate package versions are not yet on public registries. The adapter lock
-will reference the exact core SDK candidate artifact; publish that artifact first.
-
-The Playwright `PreparedMaterial` collection alias is removed. Collection returns
-`CollectedMaterial`; `ReadyMaterial` describes confirmed server readiness.
+In Playwright, collection returns `CollectedMaterial`. Use `ReadyMaterial` for
+confirmed preparation readiness; the former `PreparedMaterial` collection alias
+has been removed.
